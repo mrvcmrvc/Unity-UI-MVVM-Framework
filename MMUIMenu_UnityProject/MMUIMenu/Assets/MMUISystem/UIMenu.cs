@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public abstract class UIMenu : MonoBehaviour
 {
@@ -22,7 +23,7 @@ public abstract class UIMenu : MonoBehaviour
     protected List<UnityUIButton> UIButtons;
     protected IEnumerator _deactivateRoutine, _activateRoutine;
 
-    private int _finishedIntroTweenCount, _finishedOutroTweenCount;
+    private int _finishedTweenerCount;
 
     protected virtual IEnumerator PreDeactivateAdditional()
     {
@@ -52,11 +53,6 @@ public abstract class UIMenu : MonoBehaviour
     {
         Canvas = GetComponent<Canvas>();
 
-        IntroTweeners.ForEach(t => t.AddOnFinish(OnTweenFinished));
-
-        if(!UseIntroTweenersAsOutro)
-            OutroTweeners.ForEach(t => t.AddOnFinish(OnTweenFinished));
-
         Init();
     }
 
@@ -80,8 +76,7 @@ public abstract class UIMenu : MonoBehaviour
 
         UIButtons = new List<UnityUIButton>(GetComponentsInChildren<UnityUIButton>(true));
 
-        _finishedIntroTweenCount = 0;
-        _finishedOutroTweenCount = 0;
+        _finishedTweenerCount = 0;
     }
 
     #region Activation / Deactivation
@@ -113,8 +108,8 @@ public abstract class UIMenu : MonoBehaviour
         IntroTweeners.ForEach(tw => tw.InitValueToFROM());
 
         PlayTweeners(IntroTweeners, true);
-
-        yield return new WaitUntil(() => _finishedIntroTweenCount == IntroTweeners.Count);
+        
+        yield return new WaitUntil(() => _finishedTweenerCount == IntroTweeners.Count);
 
         yield return StartCoroutine(PostActivateAdditional());
         IsPostActivationFinished = true;
@@ -125,6 +120,9 @@ public abstract class UIMenu : MonoBehaviour
 
     public virtual void Deactivate()
     {
+        if (_activateRoutine != null)
+            StopCoroutine(_activateRoutine);
+
         if (_deactivateRoutine != null)
             StopCoroutine(_deactivateRoutine);
 
@@ -146,12 +144,10 @@ public abstract class UIMenu : MonoBehaviour
         if (!UseIntroTweenersAsOutro)
             OutroTweeners.ForEach(tw => tw.InitValueToFROM());
 
-        PlayTweeners(UseIntroTweenersAsOutro ? IntroTweeners : OutroTweeners, false);
+        var targetTweeners = UseIntroTweenersAsOutro ? IntroTweeners : OutroTweeners;
+        PlayTweeners(targetTweeners, false);
 
-        if(UseIntroTweenersAsOutro)
-            yield return new WaitUntil(() => _finishedIntroTweenCount == IntroTweeners.Count);
-        else
-            yield return new WaitUntil(() => _finishedOutroTweenCount == OutroTweeners.Count);
+        yield return new WaitUntil(() => _finishedTweenerCount == targetTweeners.Count);
 
         yield return StartCoroutine(PostDeactivateAdditional());
         IsPostDeactivationFinished = true;
@@ -164,21 +160,19 @@ public abstract class UIMenu : MonoBehaviour
 
     private void OnTweenFinished()
     {
-        if (UseIntroTweenersAsOutro)
-            _finishedIntroTweenCount++;
-        else
-            _finishedOutroTweenCount++;
+        _finishedTweenerCount++;
     }
     #endregion
 
     private void PlayTweeners(List<MMUITweener> targetTweeners, bool isOpening)
     {
-        _finishedIntroTweenCount = 0;
-        _finishedOutroTweenCount = 0;
+        _finishedTweenerCount = 0;
 
         if (targetTweeners != null && targetTweeners.Count > 0)
         {
-            if(isOpening)
+            targetTweeners.ForEach(t => t.ResetEventDelegates());
+
+            if (isOpening)
                 targetTweeners.ForEach(tw => tw.PlayForward()); //targetTweeners : IntroTweens
             else
             {
@@ -187,10 +181,12 @@ public abstract class UIMenu : MonoBehaviour
                 else
                     targetTweeners.ForEach(tw => tw.PlayForward()); //targetTweeners : OutroTweens
             }
+
+            targetTweeners.ForEach(t => t.AddOnFinish(OnTweenFinished, false));
         }
     }
 
-    public abstract void OnBackPressed();
+    public abstract void OnBackPressed(PointerEventData eventData);
     protected abstract void FinishListeningEvents();
     protected abstract void StartListeningEvents();
 }

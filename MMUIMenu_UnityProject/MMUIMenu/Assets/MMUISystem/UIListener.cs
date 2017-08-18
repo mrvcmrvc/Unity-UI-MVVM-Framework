@@ -1,24 +1,26 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 
-public class UIListener : MonoBehaviour
+public abstract class UIListener : MonoBehaviour
 {
-    private void Start()
+    protected virtual void Awake()
     {
-        UIMenuManager.Instance.OpenUIMenu(MainMenu.Instance);
+        SceneManager.sceneLoaded += OnSceneLoaded;
+        SceneManager.sceneUnloaded += OnSceneUnloaded;
     }
+
+    protected virtual void OnDestroy()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        SceneManager.sceneUnloaded -= OnSceneUnloaded;
+    }
+
+    protected abstract void OnSceneLoaded(Scene loadedScene, LoadSceneMode loadSceneMode);
+    protected abstract void OnSceneUnloaded(Scene loadedScene);
 
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
             UIMenuManager.Instance.OnBackPressed();
-
-        if (Input.GetKeyDown(KeyCode.A))
-            UIMenuManager.Instance.OpenUIMenu(MainMenu.Instance);
-
-        if (Input.GetKeyDown(KeyCode.S))
-            UIMenuManager.Instance.OpenUIMenu(PauseMenu.Instance);
-
-        if (Input.GetKeyDown(KeyCode.D))
-            UIMenuManager.Instance.OpenUIMenu(OverlayPauseMenu.Instance);
     }
 }

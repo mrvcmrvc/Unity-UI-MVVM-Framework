@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class UIMenuManager : MonoBehaviour
 {
@@ -11,21 +12,35 @@ public class UIMenuManager : MonoBehaviour
     private Stack<UIMenu> _menuStack = new Stack<UIMenu>();
     private Stack<UIMenu> _closeMenuStack = new Stack<UIMenu>();
     private UIMenu _openMenu;
+    private bool _isDeactivationFinished;
 
     private void Awake()
     {
         Instance = this;
+
+        _isDeactivationFinished = true;
+
+        UIMenu.OnPostDeactivation += StartCloseMenu;
+        SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
     private void OnDestroy()
     {
+        UIMenu.OnPostDeactivation -= StartCloseMenu;
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+
         Instance = null;
     }
 
     public void OnBackPressed()
     {
         if(_menuStack.Count > 0)
-            _menuStack.Peek().OnBackPressed();
+            _menuStack.Peek().OnBackPressed(null);
+    }
+
+    private void OnSceneLoaded(Scene loadedScene, LoadSceneMode loadSceneMode)
+    {
+        _menuStack.Clear();
     }
 
     public void OpenUIMenu(UIMenu menuRequestedToActivate)
@@ -46,27 +61,26 @@ public class UIMenuManager : MonoBehaviour
 
             var previousCanvas = _menuStack.Peek().Canvas;
 
-            menuRequestedToActivate.Canvas.sortingOrder = previousCanvas.sortingOrder + 1;
+            menuRequestedToActivate.transform.SetAsLastSibling();
         }
 
-        _menuStack.Push(menuRequestedToActivate);
-
         _openMenu = menuRequestedToActivate;
+
+        if (!_isDeactivationFinished)
+            return;
 
         StartCloseMenu(null);
     }
 
     private void StartCloseMenu(UIMenu closedMenu)
     {
-        UIMenu.OnPostDeactivation -= StartCloseMenu;
-
         if (_closeMenuStack.Count == 0)
         {
             if(_openMenu == null)
             {
                 foreach (var menu in _menuStack)
                 {
-                    if(!menu.IsPreActivationFinished)
+                    if (!menu.IsPreActivationFinished)
                         menu.Activate();
 
                     if (menu.DisableMenusUnderneath)
@@ -76,15 +90,22 @@ public class UIMenuManager : MonoBehaviour
             else
             {
                 if (!_openMenu.IsPreActivationFinished)
+                {
+                    _menuStack.Push(_openMenu);
+
                     _openMenu.Activate();
+                }
+
 
                 _openMenu = null;
             }
 
+            _isDeactivationFinished = true;
+
             return;
         }
 
-        UIMenu.OnPostDeactivation += StartCloseMenu;
+        _isDeactivationFinished = false;
 
         var instance = _closeMenuStack.Pop();
 
@@ -96,13 +117,13 @@ public class UIMenuManager : MonoBehaviour
     {
         if (_menuStack.Count == 0)
         {
-            Debug.LogErrorFormat(menuRequestedToDeactivate, "{0} cannot be closed because menu stack is empty", menuRequestedToDeactivate.GetType());
+            Debug.LogWarningFormat(menuRequestedToDeactivate, "{0} cannot be closed because menu stack is empty", menuRequestedToDeactivate.GetType());
             return;
         }
 
         if (_menuStack.Peek() != menuRequestedToDeactivate)
         {
-            Debug.LogErrorFormat(menuRequestedToDeactivate, "{0} cannot be closed because it is not on top of stack", menuRequestedToDeactivate.GetType());
+            Debug.LogWarningFormat(menuRequestedToDeactivate, "{0} cannot be closed because it is not on top of stack", menuRequestedToDeactivate.GetType());
             return;
         }
 
@@ -114,6 +135,9 @@ public class UIMenuManager : MonoBehaviour
         var instance = _menuStack.Pop();
 
         _closeMenuStack.Push(instance);
+
+        if (_closeMenuStack.Count >= 2)
+            return;
 
         StartCloseMenu(null);
     }
