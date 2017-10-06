@@ -7,8 +7,7 @@ namespace MMUISystem.UIButton
     {
         public List<Transition> StateTransitions { get; private set; }
         public List<StateBase> States { get; private set; }
-
-        StateBase _curState;
+        public StateBase CurState { get; private set; }
 
         #region Events
         public Action<StateBase> OnStateEntered;
@@ -38,6 +37,7 @@ namespace MMUISystem.UIButton
         {
             States = new List<StateBase>
             {
+                { new PressState() },
                 { new PressDownState() },
                 { new PressUpState() },
             };
@@ -45,15 +45,15 @@ namespace MMUISystem.UIButton
             StateTransitions = new List<Transition>
             {
                 //{ new Transition(InteractionCommandEnum.PressDown, InteractionCommandEnum.DragBegin), InteractionCommandEnum.DragBegin },
-                //{ new Transition(InteractionCommandEnum.PressDown, InteractionCommandEnum.Press, InteractionCommandEnum.Press) },
+                { new Transition(InteractionCommandEnum.PressDown, InteractionCommandEnum.Press, InteractionCommandEnum.Press) },
                 { new Transition(InteractionCommandEnum.PressDown, InteractionCommandEnum.PressUp, InteractionCommandEnum.PressUp) },
 
                 //{ new Transition(InteractionCommandEnum.PressUp, InteractionCommandEnum.PressDown, "cond"), InteractionCommandEnum.DelayedPress }, //IsDelayedButton
                 { new Transition(InteractionCommandEnum.PressUp, InteractionCommandEnum.PressDown, InteractionCommandEnum.PressDown) }, //!IsDelayedButton
 
                 //{ new Transition(InteractionCommandEnum.Press, InteractionCommandEnum.DragBegin), InteractionCommandEnum.DragBegin },
-                //{ new Transition(InteractionCommandEnum.Press, InteractionCommandEnum.PressUp, "cond"), InteractionCommandEnum.PressUp }, //ElapsedTime is higher than given
-                //{ new Transition(InteractionCommandEnum.Press, InteractionCommandEnum.PressUp, "cond"), InteractionCommandEnum.Tap }, //ElapsedTime is lower than given
+                { new Transition(InteractionCommandEnum.Press, InteractionCommandEnum.PressUp, InteractionCommandEnum.PressUp, new ElapsedTimeIsHigherThan(0.1f)) }, //ElapsedTime is higher than given
+                { new Transition(InteractionCommandEnum.Press, InteractionCommandEnum.PressUp, InteractionCommandEnum.Tap, new ElapsedTimeIsLowerThan(0.1f)) }, //ElapsedTime is lower than given
 
                 //{ new Transition(InteractionCommandEnum.Tap, InteractionCommandEnum.PressDown), InteractionCommandEnum.TapAndPress  },
 
@@ -78,42 +78,42 @@ namespace MMUISystem.UIButton
 
         private void ResetState()
         {
-            if (_curState != null)
+            if (CurState != null)
             {
-                _curState.ExitStateHandler();
-                FireOnStateExited(_curState);
+                CurState.ExitStateHandler();
+                FireOnStateExited(CurState);
             }
 
-            _curState = FindState(InteractionCommandEnum.PressUp);
+            CurState = FindState(InteractionCommandEnum.PressUp);
 
-            _curState.EnterStateHandler();
-            FireOnStateEntered(_curState);
+            CurState.EnterStateHandler();
+            FireOnStateEntered(CurState);
 
-            _curState.StateHandler();
-            FireOnStateHandled(_curState);
+            CurState.StateHandler();
+            FireOnStateHandled(CurState);
         }
 
         public void UpdateState(InteractionCommandEnum requestedState)
         {
             List<Transition> candidateTransitions = FindAllTransitions(requestedState);
             Transition eligibleTransition = FilterCandidateTransByCond(candidateTransitions);
-            UnityEngine.Debug.Log(eligibleTransition.CurState + " " + eligibleTransition.RequestedState + " -> " + eligibleTransition.OutcomeState);
+
             if (eligibleTransition == null)
                 return;
 
-            if (_curState != null)
+            if (CurState != null)
             {
-                _curState.ExitStateHandler();
-                FireOnStateExited(_curState);
+                CurState.ExitStateHandler();
+                FireOnStateExited(CurState);
             }
 
-            _curState = FindState(eligibleTransition.OutcomeState);
+            CurState = FindState(eligibleTransition.OutcomeState);
 
-            _curState.EnterStateHandler();
-            FireOnStateEntered(_curState);
+            CurState.EnterStateHandler();
+            FireOnStateEntered(CurState);
 
-            _curState.StateHandler();
-            FireOnStateHandled(_curState);
+            CurState.StateHandler();
+            FireOnStateHandled(CurState);
         }
 
         private StateBase FindState(InteractionCommandEnum curState)
@@ -123,10 +123,10 @@ namespace MMUISystem.UIButton
 
         private List<Transition> FindAllTransitions(InteractionCommandEnum requestedState)
         {
-            if (_curState == null)
+            if (CurState == null)
                 return null;
 
-            return StateTransitions.FindAll(tr => tr.CurState == _curState.StateEnum && tr.RequestedState == requestedState);
+            return StateTransitions.FindAll(tr => tr.CurState == CurState.StateEnum && tr.RequestedState == requestedState);
         }
 
         private Transition FilterCandidateTransByCond(List<Transition> candidateTransitions)

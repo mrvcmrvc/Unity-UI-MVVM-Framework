@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -145,7 +146,7 @@ namespace MMUISystem.UIButton
 
                 LastEventData = eventData;
 
-                StateMachine.UpdateState(InteractionCommandEnum.PressDown);
+                TriggerStateMachine(InteractionCommandEnum.PressDown);
             }
         }
 
@@ -158,7 +159,7 @@ namespace MMUISystem.UIButton
 
                 LastEventData = eventData;
 
-                StateMachine.UpdateState(InteractionCommandEnum.PressUp);
+                TriggerStateMachine(InteractionCommandEnum.PressUp);
             }
         }
         #endregion
@@ -177,9 +178,12 @@ namespace MMUISystem.UIButton
                 case InteractionCommandEnum.DoubleTap:
                     break;
                 case InteractionCommandEnum.Press:
+                    FireOnButtonPress(LastEventData);
                     break;
                 case InteractionCommandEnum.PressDown:
                     FireOnButtonPressDown(LastEventData);
+
+                    StartCoroutine(WaitForAndCall(Time.deltaTime, () => TriggerStateMachine(InteractionCommandEnum.Press)));
                     break;
                 case InteractionCommandEnum.PressUp:
                     FireOnButtonPressUp(LastEventData);
@@ -195,5 +199,17 @@ namespace MMUISystem.UIButton
         {
         }
         #endregion
+
+        private IEnumerator WaitForAndCall(float duration, Action method)
+        {
+            yield return new WaitForSeconds(duration);
+
+            method.Invoke();
+        }
+
+        private void TriggerStateMachine(InteractionCommandEnum interactionEnum)
+        {
+            StateMachine.UpdateState(interactionEnum);
+        }
     }
 }

@@ -1,6 +1,4 @@
-﻿using System.Collections;
-
-namespace MMUISystem.UIButton
+﻿namespace MMUISystem.UIButton
 {
     public class PressDownState : StateBase
     {

@@ -1,10 +1,10 @@
 ﻿namespace MMUISystem.UIButton
 {
-    public class ElapsedTimeIsHigherThan : ConditionBase
+    public class ElapsedTimeIsLowerThan : ConditionBase
     {
         float _targetDuration;
 
-        public ElapsedTimeIsHigherThan(float targetDuration)
+        public ElapsedTimeIsLowerThan(float targetDuration)
         {
             _targetDuration = targetDuration;
         }
@@ -13,8 +13,7 @@
         {
             float passedTime = (float)param[0];
 
-            return passedTime >= _targetDuration;
+            return passedTime <= _targetDuration;
         }
     }
 }
-
