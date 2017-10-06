@@ -2,13 +2,13 @@
 
 public static class MMUISystemUtilities
 {
-    public static Vector2 WorldPosToCanvasPos(RectTransform targetRect, Vector3 worldPos, Camera targetCamera, Canvas targetCanvas, bool projectInLocalSpace)
+    public static Vector2 WorldPosToCanvasPos(RectTransform targetRect, Vector3 worldPos, Camera targetCamera, Canvas mainCanvas, bool projectInLocalSpace)
     {
-        RectTransform projectTransform = GetProjectionTransform(targetRect, targetCanvas, projectInLocalSpace);
+        RectTransform projectTransform = GetProjectionTransform(targetRect, mainCanvas, projectInLocalSpace);
 
         Vector2 parentOffset = Vector2.zero;
-        if (CheckIfProjectInWorldAndParentIsNotCanvas(targetRect, targetCanvas, projectInLocalSpace))
-            parentOffset = GetOffsetCausedByParentAnchoring(targetRect);
+        if (CheckIfProjectInWorldAndParentIsNotCanvas(targetRect, mainCanvas, projectInLocalSpace))
+            parentOffset = GetOffsetCausedByParentAnchoring(targetRect, mainCanvas);
 
         var projectAreaSize = projectTransform.rect.size;
         Vector2 projectDistOffset = new Vector2(projectAreaSize.x * targetRect.anchorMin.x, projectAreaSize.y * targetRect.anchorMin.y) + parentOffset;
@@ -17,14 +17,13 @@ public static class MMUISystemUtilities
         return new Vector2(projectAreaSize.x * viewportPos.x, projectAreaSize.y * viewportPos.y) - projectDistOffset;
     }
 
-    //Şu an için parent anchor ın stretch-stretch veya middle-center olmasını destekliyor (Diğerleri GetOffsetCausedByParentAnchoring() daki sizeDelta ve offset ler yüzünden bozuluyor)
-    public static Vector2 ScreenToCanvasPos(RectTransform targetRect, Vector2 screenPos, Camera targetCamera, Canvas targetCanvas, bool projectInLocalSpace)
+    public static Vector2 ScreenToCanvasPos(RectTransform targetRect, Vector2 screenPos, Camera targetCamera, Canvas mainCanvas, bool projectInLocalSpace)
     {
-        RectTransform projectTransform = GetProjectionTransform(targetRect, targetCanvas, projectInLocalSpace);
+        RectTransform projectTransform = GetProjectionTransform(targetRect, mainCanvas, projectInLocalSpace);
 
         Vector2 parentOffset = Vector2.zero;
-        if (CheckIfProjectInWorldAndParentIsNotCanvas(targetRect,targetCanvas, projectInLocalSpace))
-            parentOffset = GetOffsetCausedByParentAnchoring(targetRect);
+        if (CheckIfProjectInWorldAndParentIsNotCanvas(targetRect,mainCanvas, projectInLocalSpace))
+            parentOffset = GetOffsetCausedByParentAnchoring(targetRect, mainCanvas);
 
         var projectAreaSize = projectTransform.rect.size;
         Vector2 projectDistOffset = new Vector2(projectAreaSize.x * targetRect.anchorMin.x, projectAreaSize.y * targetRect.anchorMin.y) + parentOffset;
@@ -33,29 +32,37 @@ public static class MMUISystemUtilities
         return new Vector2(projectAreaSize.x * viewportPos.x, projectAreaSize.y * viewportPos.y) - projectDistOffset;
     }
 
-    static RectTransform GetProjectionTransform(RectTransform targetRect, Canvas targetCanvas, bool projectInLocalSpace)
+    static RectTransform GetProjectionTransform(RectTransform targetRect, Canvas mainCanvas, bool projectInLocalSpace)
     {
-        RectTransform projectTransform = (RectTransform)targetCanvas.transform;
+        RectTransform projectTransform = (RectTransform)mainCanvas.transform;
         if (projectInLocalSpace)
             projectTransform = (RectTransform)targetRect.parent;
 
         return projectTransform;
     }
 
-    static Vector2 GetOffsetCausedByParentAnchoring(RectTransform targetRect)
+    //Called when only projected to world space
+    static Vector2 GetOffsetCausedByParentAnchoring(RectTransform targetRect, Canvas mainCanvas)
     {
-        Vector2 offset = Vector2.zero;
-
         var parentRect = (RectTransform)targetRect.parent;
+        var mainCanvasRect = (RectTransform)mainCanvas.transform;
 
-        offset.x = (parentRect.sizeDelta.x / 2f) + parentRect.offsetMin.x;
-        offset.y = -1 * ((parentRect.sizeDelta.y / 2f) + (-1 * parentRect.offsetMax.y));
+        Vector2 sizeDeltaWithoutAnchor = mainCanvasRect.rect.size - parentRect.rect.size;
+
+        Vector2 parentRectRightBottom = new Vector2(parentRect.position.x + (mainCanvas.scaleFactor * (parentRect.rect.size / 2f).x), parentRect.position.y - (mainCanvas.scaleFactor * (parentRect.rect.size / 2f).y));
+        Vector2 mainCanvasRightBottomPos = new Vector2(mainCanvasRect.position.x + (mainCanvas.scaleFactor * (mainCanvasRect.rect.size / 2f).x), 0f);
+
+        Vector2 offset = new Vector2(mainCanvasRightBottomPos.x - parentRectRightBottom.x, parentRectRightBottom.y);
+        Vector2 offsetBasedOnCanvasScale = offset * (1 - mainCanvas.scaleFactor);
+
+        offset.x = (sizeDeltaWithoutAnchor.x / 2f) - offset.x - offsetBasedOnCanvasScale.x;
+        offset.y = -1 * ((sizeDeltaWithoutAnchor.y / 2f) - offset.y - offsetBasedOnCanvasScale.y);
 
         return offset;
     }
 
-    static bool CheckIfProjectInWorldAndParentIsNotCanvas(RectTransform targetRect, Canvas targetCanvas, bool projectInLocalSpace)
+    static bool CheckIfProjectInWorldAndParentIsNotCanvas(RectTransform targetRect, Canvas mainCanvas, bool projectInLocalSpace)
     {
-        return !projectInLocalSpace && (RectTransform)targetRect.parent != (RectTransform)targetCanvas.transform;
+        return !projectInLocalSpace && (RectTransform)targetRect.parent != (RectTransform)mainCanvas.transform;
     }
 }

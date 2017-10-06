@@ -40,25 +40,7 @@ public class AdvancedFillBarScript : MonoBehaviour
         UpdatePercentageText(InitialValue * 100.0f);
     }
 
-    //private void Update()
-    //{
-    //    if(Input.GetKeyUp(KeyCode.Keypad1))
-    //        UpdateBar(100f);
-
-    //    if (Input.GetKeyUp(KeyCode.Keypad2))
-    //        UpdateBar(75f);
-
-    //    if (Input.GetKeyUp(KeyCode.Keypad3))
-    //        UpdateBar(50f);
-
-    //    if (Input.GetKeyUp(KeyCode.Keypad4))
-    //        UpdateBar(25f);
-
-    //    if (Input.GetKeyUp(KeyCode.Keypad5))
-    //        UpdateBar(0f);
-    //}
-
-    public void UpdateBar(int percentage)
+    public void UpdateBar(int percentage, bool instant = false)
     {
         if (_updateRoutine != null)
             StopCoroutine(_updateRoutine);
@@ -69,8 +51,13 @@ public class AdvancedFillBarScript : MonoBehaviour
 
         _isBarDecrease = Slider.value > _targetValue;
 
-        _updateRoutine = UpdateStaminaBar();
-        StartCoroutine(_updateRoutine);
+        if(!instant)
+        {
+            _updateRoutine = UpdateStaminaBar();
+            StartCoroutine(_updateRoutine);
+        }
+        else
+            Slider.value = _targetValue;
     }
 
     void UpdatePercentageText(float percentage)

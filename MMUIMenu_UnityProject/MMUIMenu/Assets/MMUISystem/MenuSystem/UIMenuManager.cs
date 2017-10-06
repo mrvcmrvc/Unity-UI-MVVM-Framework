@@ -19,15 +19,15 @@ public class UIMenuManager : MonoBehaviour
         Instance = this;
 
         _isDeactivationFinished = true;
-
+        
         UIMenu.OnPostDeactivation += StartCloseMenu;
-        SceneManager.sceneLoaded += OnSceneLoaded;
+        SceneManager.sceneUnloaded += OnSceneUnloaded;
     }
 
     private void OnDestroy()
     {
         UIMenu.OnPostDeactivation -= StartCloseMenu;
-        SceneManager.sceneLoaded -= OnSceneLoaded;
+        SceneManager.sceneUnloaded -= OnSceneUnloaded;
 
         Instance = null;
     }
@@ -38,7 +38,7 @@ public class UIMenuManager : MonoBehaviour
             _menuStack.Peek().OnBackPressed(null);
     }
 
-    private void OnSceneLoaded(Scene loadedScene, LoadSceneMode loadSceneMode)
+    private void OnSceneUnloaded(Scene unloadedScene)
     {
         _menuStack.Clear();
     }
@@ -108,7 +108,6 @@ public class UIMenuManager : MonoBehaviour
         _isDeactivationFinished = false;
 
         var instance = _closeMenuStack.Pop();
-
         if(!instance.IsPreDeactivationFinished)
             instance.Deactivate();
     }
