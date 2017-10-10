@@ -2,6 +2,6 @@
 {
     public abstract class ConditionBase
     {
-        public abstract bool CheckCondition(object[] param);
+        public abstract bool CheckCondition(params object[] param);
     }
 }

@@ -2,11 +2,11 @@
 
 namespace MMUISystem.UIButton
 {
-    public class PressUpState : StateBase
+    public class TapAndPressState : StateBase
     {
-        public PressUpState()
+        public TapAndPressState()
         {
-            StateEnum = InteractionStateEnum.PressUp;
+            StateEnum = InteractionStateEnum.TapAndPress;
 
             Conditions.Add(new ElapsedTimeIsHigherThan(500));
         }
@@ -30,9 +30,9 @@ namespace MMUISystem.UIButton
         public override void StateHandler()
         {
             if (CheckTransitions())
-                FireOnNewStateRequested(CommandEnum.Idle);
+                FireOnNewStateRequested(CommandEnum.PressDown);
             else
-                FireOnNewStateRequested(CommandEnum.Tap);
+                FireOnStateHandled();
         }
     }
 }

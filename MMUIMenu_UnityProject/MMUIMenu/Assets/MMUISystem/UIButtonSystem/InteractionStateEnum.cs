@@ -1,16 +1,17 @@
 ﻿namespace MMUISystem.UIButton
 {
-    public enum InteractionCommandEnum
+    public enum InteractionStateEnum
     {
+        Idle,
         PressDown,
         PressUp,
         Press,
         Tap,
         DoubleTap,
         TapAndPress,
-        DelayedPress,
-        DragBegin,
-        Drag,
-        DragEnd
+        //DelayedPress,
+        //DragBegin,
+        //Drag,
+        //DragEnd
     }
 }

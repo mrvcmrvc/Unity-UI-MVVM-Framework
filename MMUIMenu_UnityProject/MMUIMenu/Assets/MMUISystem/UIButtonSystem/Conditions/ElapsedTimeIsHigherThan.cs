@@ -1,10 +1,10 @@
 ﻿namespace MMUISystem.UIButton
 {
-    public class ElapsedTimeIsLowerThan : ConditionBase
+    public class ElapsedTimeIsHigherThan : ConditionBase
     {
-        float _targetMilliSeconds;
+        int _targetMilliSeconds;
 
-        public ElapsedTimeIsLowerThan(int targetMilliSeconds)
+        public ElapsedTimeIsHigherThan(int targetMilliSeconds)
         {
             _targetMilliSeconds = targetMilliSeconds;
         }
@@ -12,8 +12,9 @@
         public override bool CheckCondition(params object[] param)
         {
             int passedTime = (int)param[0];
-
-            return passedTime <= _targetMilliSeconds;
+            UnityEngine.Debug.Log(passedTime);
+            return passedTime >= _targetMilliSeconds;
         }
     }
 }
+

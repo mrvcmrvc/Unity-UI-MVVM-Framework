@@ -10,33 +10,43 @@ namespace MMUISystem.UIButton
         public StateBase CurState { get; private set; }
 
         #region Events
-        public Action<StateBase> OnStateEntered;
-        public Action<StateBase> OnStateHandled;
-        public Action<StateBase> OnStateExited;
+        public Action<InteractionStateEnum> OnStateEntered;
+        public Action<InteractionStateEnum> OnStateHandled;
+        public Action<InteractionStateEnum> OnStateExited;
 
-        private void FireOnStateEntered(StateBase curState)
+        private void FireOnStateEntered(InteractionStateEnum state)
         {
             if (OnStateEntered != null)
-                OnStateEntered(curState);
+                OnStateEntered(state);
         }
 
-        private void FireOnStateHandled(StateBase curState)
+        private void FireOnStateHandled(InteractionStateEnum state)
         {
             if (OnStateHandled != null)
-                OnStateHandled(curState);
+                OnStateHandled(state);
         }
 
-        private void FireOnStateExited(StateBase curState)
+        private void FireOnStateExited(InteractionStateEnum state)
         {
             if (OnStateExited != null)
-                OnStateExited(curState);
+                OnStateExited(state);
         }
         #endregion
 
         public void Init()
         {
+            StateBase.OnEnterStateHandled += FireOnStateEntered;
+            StateBase.OnStateHandled += FireOnStateHandled;
+            StateBase.OnExitStateHandled += FireOnStateExited;
+
+            StateBase.OnNewStateRequested += OnNewStateRequested;
+
             States = new List<StateBase>
             {
+                { new TapState() },
+                { new TapAndPressState() },
+                { new DoubleTapState() },
+                { new IdleState() },
                 { new PressState() },
                 { new PressDownState() },
                 { new PressUpState() },
@@ -44,97 +54,77 @@ namespace MMUISystem.UIButton
 
             StateTransitions = new List<Transition>
             {
-                //{ new Transition(InteractionCommandEnum.PressDown, InteractionCommandEnum.DragBegin), InteractionCommandEnum.DragBegin },
-                { new Transition(InteractionCommandEnum.PressDown, InteractionCommandEnum.Press, InteractionCommandEnum.Press) },
-                { new Transition(InteractionCommandEnum.PressDown, InteractionCommandEnum.PressUp, InteractionCommandEnum.PressUp) },
-
-                //{ new Transition(InteractionCommandEnum.PressUp, InteractionCommandEnum.PressDown, "cond"), InteractionCommandEnum.DelayedPress }, //IsDelayedButton
-                { new Transition(InteractionCommandEnum.PressUp, InteractionCommandEnum.PressDown, InteractionCommandEnum.PressDown) }, //!IsDelayedButton
-
-                //{ new Transition(InteractionCommandEnum.Press, InteractionCommandEnum.DragBegin), InteractionCommandEnum.DragBegin },
-                { new Transition(InteractionCommandEnum.Press, InteractionCommandEnum.PressUp, InteractionCommandEnum.PressUp, new ElapsedTimeIsHigherThan(0.1f)) }, //ElapsedTime is higher than given
-                { new Transition(InteractionCommandEnum.Press, InteractionCommandEnum.PressUp, InteractionCommandEnum.Tap, new ElapsedTimeIsLowerThan(0.1f)) }, //ElapsedTime is lower than given
-
-                //{ new Transition(InteractionCommandEnum.Tap, InteractionCommandEnum.PressDown), InteractionCommandEnum.TapAndPress  },
-
-                //{ new Transition(InteractionCommandEnum.TapAndPress, InteractionCommandEnum.DragBegin), InteractionCommandEnum.DragBegin },
-                //{ new Transition(InteractionCommandEnum.TapAndPress, InteractionCommandEnum.PressUp, "cond"), InteractionCommandEnum.PressUp }, //ElapsedTime is higher than given
-                //{ new Transition(InteractionCommandEnum.TapAndPress, InteractionCommandEnum.PressUp, "cond"), InteractionCommandEnum.DoubleTap }, //ElapsedTime is lower than given
-
-                //{ new Transition(InteractionCommandEnum.DelayedPress, InteractionCommandEnum.Press), InteractionCommandEnum.Press },
-                //{ new Transition(InteractionCommandEnum.DelayedPress, InteractionCommandEnum.PressUp), InteractionCommandEnum.PressUp },
-
-                //{ new Transition(InteractionCommandEnum.DragBegin, InteractionCommandEnum.Drag), InteractionCommandEnum.Drag },
-
-                //{ new Transition(InteractionCommandEnum.Drag, InteractionCommandEnum.DragEnd), InteractionCommandEnum.DragEnd },
-                //{ new Transition(InteractionCommandEnum.Drag, InteractionCommandEnum.PressUp), InteractionCommandEnum.PressUp },
-
-                //{ new Transition(InteractionCommandEnum.DragEnd, InteractionCommandEnum.Press), InteractionCommandEnum.Press },
-                //{ new Transition(InteractionCommandEnum.DragEnd, InteractionCommandEnum.PressUp), InteractionCommandEnum.PressUp },
+                { new Transition(InteractionStateEnum.Tap, CommandEnum.PressDown, InteractionStateEnum.TapAndPress) },
+                { new Transition(InteractionStateEnum.TapAndPress, CommandEnum.PressDown, InteractionStateEnum.PressDown) },
+                { new Transition(InteractionStateEnum.TapAndPress, CommandEnum.PressUp, InteractionStateEnum.DoubleTap) },
+                { new Transition(InteractionStateEnum.DoubleTap, CommandEnum.PressUp, InteractionStateEnum.Idle) },
+                { new Transition(InteractionStateEnum.Idle, CommandEnum.PressDown, InteractionStateEnum.PressDown) },
+                { new Transition(InteractionStateEnum.PressDown, CommandEnum.PressDown, InteractionStateEnum.Press) },
+                { new Transition(InteractionStateEnum.Press, CommandEnum.PressUp, InteractionStateEnum.PressUp) },
+                { new Transition(InteractionStateEnum.PressUp, CommandEnum.Tap, InteractionStateEnum.Tap) },
+                { new Transition(InteractionStateEnum.PressUp, CommandEnum.Idle, InteractionStateEnum.Idle) },
             };
 
-            ResetState();
+            ChangeStateTo(InteractionStateEnum.Idle);
         }
 
-        private void ResetState()
+        public void ResetMachine()
         {
-            if (CurState != null)
+            StateBase.OnEnterStateHandled -= FireOnStateEntered;
+            StateBase.OnStateHandled -= FireOnStateHandled;
+            StateBase.OnExitStateHandled -= FireOnStateExited;
+
+            StateBase.OnNewStateRequested -= OnNewStateRequested;
+        }
+
+        private void OnNewStateRequested(CommandEnum command)
+        {
+            UpdateState(command);
+        }
+
+        public void UpdateState(CommandEnum command)
+        {
+            if(CurState == null)
             {
-                CurState.ExitStateHandler();
-                FireOnStateExited(CurState);
+                UnityEngine.Debug.LogError("UIButton State Machine is called early!");
+                return;
             }
 
-            CurState = FindState(InteractionCommandEnum.PressUp);
-
-            CurState.EnterStateHandler();
-            FireOnStateEntered(CurState);
-
-            CurState.StateHandler();
-            FireOnStateHandled(CurState);
-        }
-
-        public void UpdateState(InteractionCommandEnum requestedState)
-        {
-            List<Transition> candidateTransitions = FindAllTransitions(requestedState);
-            Transition eligibleTransition = FilterCandidateTransByCond(candidateTransitions);
-
+            Transition eligibleTransition = FindTransition(CurState.StateEnum, command);
             if (eligibleTransition == null)
                 return;
 
+            ChangeStateTo(eligibleTransition.OutcomeState);
+        }
+
+        private void ChangeStateTo(InteractionStateEnum state)
+        {
+            DateTime stateEnterTime = CurState == null ? DateTime.Now : CurState.StateEnterTime;
+
             if (CurState != null)
-            {
                 CurState.ExitStateHandler();
-                FireOnStateExited(CurState);
+
+            CurState = FindState(state);
+
+            if (CurState == null)
+            {
+                UnityEngine.Debug.LogError("CurState is null");
+                return;
             }
 
-            CurState = FindState(eligibleTransition.OutcomeState);
-
-            CurState.EnterStateHandler();
-            FireOnStateEntered(CurState);
+            CurState.EnterStateHandler(stateEnterTime);
 
             CurState.StateHandler();
-            FireOnStateHandled(CurState);
         }
 
-        private StateBase FindState(InteractionCommandEnum curState)
+        private StateBase FindState(InteractionStateEnum state)
         {
-            return States.Find(s => s.StateEnum == curState);
+            return States.Find(s => s.StateEnum == state);
         }
 
-        private List<Transition> FindAllTransitions(InteractionCommandEnum requestedState)
+        private Transition FindTransition(InteractionStateEnum state, CommandEnum command)
         {
-            if (CurState == null)
-                return null;
-
-            return StateTransitions.FindAll(tr => tr.CurState == CurState.StateEnum && tr.RequestedState == requestedState);
-        }
-
-        private Transition FilterCandidateTransByCond(List<Transition> candidateTransitions)
-        {
-            if (candidateTransitions == null || candidateTransitions.Count == 0)
-                return null;
-
-            return candidateTransitions.Find(tr => tr.IsEligibleToTransition());
+            return StateTransitions.Find(tr => tr.CurState == state && tr.Command == command);
         }
     }
 }

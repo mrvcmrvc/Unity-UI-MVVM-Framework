@@ -2,11 +2,11 @@
 
 namespace MMUISystem.UIButton
 {
-    public class PressDownState : StateBase
+    public class IdleState : StateBase
     {
-        public PressDownState()
+        public IdleState()
         {
-            StateEnum = InteractionStateEnum.PressDown;
+            StateEnum = InteractionStateEnum.Idle;
         }
 
         public override void EnterStateHandler(params object[] addParams)
@@ -24,8 +24,6 @@ namespace MMUISystem.UIButton
         public override void StateHandler()
         {
             FireOnStateHandled();
-
-            FireOnNewStateRequested(CommandEnum.PressDown);
         }
     }
 }

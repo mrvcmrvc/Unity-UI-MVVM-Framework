@@ -4,24 +4,26 @@ namespace MMUISystem.UIButton
 {
     public class PressState : StateBase
     {
-        public DateTime PressEnterTime;
-
         public PressState()
         {
-            StateEnum = InteractionCommandEnum.Press;
+            StateEnum = InteractionStateEnum.Press;
         }
 
-        public override void EnterStateHandler()
+        public override void EnterStateHandler(params object[] addParams)
         {
-            PressEnterTime = DateTime.Now;
+            StateEnterTime = DateTime.Now;
+
+            FireOnEnterStateHandled();
         }
 
         public override void ExitStateHandler()
         {
+            FireOnExitStateHandled();
         }
 
         public override void StateHandler()
         {
+            FireOnStateHandled();
         }
     }
 }

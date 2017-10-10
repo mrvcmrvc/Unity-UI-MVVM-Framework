@@ -114,6 +114,8 @@ namespace MMUISystem.UIButton
 
         protected virtual void OnDisable()
         {
+            StateMachine.ResetMachine();
+
             if (StartListeningOnEnable)
                 StopListening();
         }
@@ -146,7 +148,7 @@ namespace MMUISystem.UIButton
 
                 LastEventData = eventData;
 
-                TriggerStateMachine(InteractionCommandEnum.PressDown);
+                TriggerStateMachine(CommandEnum.PressDown);
             }
         }
 
@@ -159,57 +161,49 @@ namespace MMUISystem.UIButton
 
                 LastEventData = eventData;
 
-                TriggerStateMachine(InteractionCommandEnum.PressUp);
+                TriggerStateMachine(CommandEnum.PressUp);
             }
         }
         #endregion
 
         #region StateMachine Implementation
-        private void OnStateEntered(StateBase state)
+        private void OnStateEntered(InteractionStateEnum state)
         {
         }
 
-        private void OnStateHandled(StateBase state)
+        private void OnStateHandled(InteractionStateEnum state)
         {
-            switch(state.StateEnum)
+            Debug.Log(state);
+            switch(state)
             {
-                case InteractionCommandEnum.DelayedPress:
+                //case InteractionStateEnum.DelayedPress:
+                //    break;
+                case InteractionStateEnum.DoubleTap:
+                    FireOnButtonDoubleTap(LastEventData);
                     break;
-                case InteractionCommandEnum.DoubleTap:
-                    break;
-                case InteractionCommandEnum.Press:
+                case InteractionStateEnum.Press:
                     FireOnButtonPress(LastEventData);
                     break;
-                case InteractionCommandEnum.PressDown:
+                case InteractionStateEnum.PressDown:
                     FireOnButtonPressDown(LastEventData);
-
-                    StartCoroutine(WaitForAndCall(Time.deltaTime, () => TriggerStateMachine(InteractionCommandEnum.Press)));
                     break;
-                case InteractionCommandEnum.PressUp:
+                case InteractionStateEnum.Idle:
                     FireOnButtonPressUp(LastEventData);
                     break;
-                case InteractionCommandEnum.Tap:
-                    break;
-                case InteractionCommandEnum.TapAndPress:
+                case InteractionStateEnum.TapAndPress:
+                    FireOnTapAndPress(LastEventData);
                     break;
             }
         }
 
-        private void OnStateExited(StateBase state)
+        private void OnStateExited(InteractionStateEnum state)
         {
         }
         #endregion
 
-        private IEnumerator WaitForAndCall(float duration, Action method)
+        private void TriggerStateMachine(CommandEnum command)
         {
-            yield return new WaitForSeconds(duration);
-
-            method.Invoke();
-        }
-
-        private void TriggerStateMachine(InteractionCommandEnum interactionEnum)
-        {
-            StateMachine.UpdateState(interactionEnum);
+            StateMachine.UpdateState(command);
         }
     }
 }
