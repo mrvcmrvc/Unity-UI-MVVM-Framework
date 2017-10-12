@@ -1,56 +1,60 @@
-﻿using MMUISystem.UIButton;
+﻿using System;
+using MMUISystem.UIButton;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class StateChangeTestScript : MonoBehaviour
 {
-    public TextMeshProUGUI Text;
+    public Slider SensivitySlider;
+    public TextMeshProUGUI Text, ValueText;
     public UnityUIButton UIButton;
 
     private void Awake()
     {
         UIButton.OnButtonPressDown += OnPressDown;
         UIButton.OnButtonPressUp += OnButtonPressUp;
-        UIButton.OnButtonPressCancel += OnButtonPressCancel;
         UIButton.OnButtonPress += OnButtonPress;
         UIButton.OnButtonDoubleTap += OnButtonDoubleTap;
+        UIButton.OnButtonTap += OnButtonTap;
         UIButton.OnTapAndPress += OnTapAndPress;
-        UIButton.OnDelayedButtonPressDown += OnDelayedButtonPressDown;
     }
 
-    private void OnDelayedButtonPressDown(PointerEventData obj)
+    void Update()
     {
-        Text.text = "OnDelayedButtonPressDown";
+        ValueText.text = SensivitySlider.value.ToString();
+
+        UIButtonUtilities.SensivityInMilliseconds = (int)SensivitySlider.value;
     }
 
     private void OnTapAndPress(PointerEventData obj)
     {
-        Text.text = "OnTapAndPress";
+        Text.text = "TapAndPress";
+    }
+
+    private void OnButtonTap(PointerEventData obj)
+    {
+        Text.text = "Tap";
     }
 
     private void OnButtonDoubleTap(PointerEventData obj)
     {
-        Text.text = "OnButtonDoubleTap";
+        Text.text = "DoubleTap";
     }
 
     private void OnButtonPress(PointerEventData obj)
     {
-        Text.text = "OnButtonPress";
-    }
-
-    private void OnButtonPressCancel(PointerEventData obj)
-    {
-        Text.text = "OnButtonPressCancel";
+        Text.text = "Press";
     }
 
     private void OnButtonPressUp(PointerEventData obj)
     {
-        Text.text = "OnButtonPressUp";
+        Text.text = "PressUp";
     }
 
     private void OnPressDown(PointerEventData obj)
     {
-        Text.text = "OnPressDown";
+        Text.text = "PressDown";
     }
 }

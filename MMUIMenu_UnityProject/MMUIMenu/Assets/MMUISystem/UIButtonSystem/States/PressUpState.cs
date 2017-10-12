@@ -8,14 +8,14 @@ namespace MMUISystem.UIButton
         {
             StateEnum = InteractionStateEnum.PressUp;
 
-            Conditions.Add(new ElapsedTimeIsHigherThan(500));
+            Conditions.Add(new ElapsedTimeIsHigherThan());
         }
 
         public override void EnterStateHandler(params object[] addParams)
         {
             StateEnterTime = DateTime.Now;
 
-            DeltaTimeBetweenPrevState = (StateEnterTime - ((DateTime)addParams[0])).Milliseconds;
+            DeltaTimeBetweenPrevState = UIButtonUtilities.GetTotalMillisecondsBetween(StateEnterTime, (DateTime)addParams[0]);
 
             FireOnEnterStateHandled();
         }

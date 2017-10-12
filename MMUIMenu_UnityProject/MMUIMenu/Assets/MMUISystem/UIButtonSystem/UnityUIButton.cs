@@ -20,48 +20,51 @@ namespace MMUISystem.UIButton
         private PointerEventData LastEventData;
 
         #region Events
-    public Action<PointerEventData> OnButtonPressDown;
-        public Action<PointerEventData> OnButtonPress;
-        public Action<PointerEventData> OnDelayedButtonPressDown;
+        public Action<PointerEventData> OnButtonPressDown;
         public Action<PointerEventData> OnButtonPressUp;
+        public Action<PointerEventData> OnButtonPress;
+
+        public Action<PointerEventData> OnButtonTap;
         public Action<PointerEventData> OnButtonDoubleTap;
         public Action<PointerEventData> OnTapAndPress;
+
         public Action<PointerEventData> OnButtonPressCancel;
+        public Action<PointerEventData> OnDelayedButtonPressDown;
 
-        public static Action<PointerEventData> OnButtonPressDelayStarted;
-        public static Action<float> OnButtonPressDelayUpdate;
-        public static Action<PointerEventData> OnButtonPressDelayFinished;
-        public static Action OnButtonPressDelayCanceled;
+        //public static Action<PointerEventData> OnButtonPressDelayStarted;
+        //public static Action<float> OnButtonPressDelayUpdate;
+        //public static Action<PointerEventData> OnButtonPressDelayFinished;
+        //public static Action OnButtonPressDelayCanceled;
 
-        void FireOnButtonPressDelayCanceled()
-        {
-            if (OnButtonPressDelayCanceled != null)
-                OnButtonPressDelayCanceled();
-        }
+        //void FireOnButtonPressDelayCanceled()
+        //{
+        //    if (OnButtonPressDelayCanceled != null)
+        //        OnButtonPressDelayCanceled();
+        //}
 
-        void FireOnButtonPressDelayUpdate(float progress)
-        {
-            if (OnButtonPressDelayUpdate != null)
-                OnButtonPressDelayUpdate(progress);
-        }
+        //void FireOnButtonPressDelayUpdate(float progress)
+        //{
+        //    if (OnButtonPressDelayUpdate != null)
+        //        OnButtonPressDelayUpdate(progress);
+        //}
 
-        void FireOnDelayStarted(PointerEventData eventData)
-        {
-            if (OnButtonPressDelayStarted != null)
-                OnButtonPressDelayStarted(eventData);
-        }
+        //void FireOnDelayStarted(PointerEventData eventData)
+        //{
+        //    if (OnButtonPressDelayStarted != null)
+        //        OnButtonPressDelayStarted(eventData);
+        //}
 
-        void FireOnDelayFinished(PointerEventData eventData)
-        {
-            if (OnButtonPressDelayFinished != null)
-                OnButtonPressDelayFinished(eventData);
-        }
+        //void FireOnDelayFinished(PointerEventData eventData)
+        //{
+        //    if (OnButtonPressDelayFinished != null)
+        //        OnButtonPressDelayFinished(eventData);
+        //}
 
-        void FireOnDelayedButtonPressDown(PointerEventData eventData)
-        {
-            if (OnDelayedButtonPressDown != null)
-                OnDelayedButtonPressDown(eventData);
-        }
+        //void FireOnDelayedButtonPressDown(PointerEventData eventData)
+        //{
+        //    if (OnDelayedButtonPressDown != null)
+        //        OnDelayedButtonPressDown(eventData);
+        //}
 
         void FireOnButtonPressDown(PointerEventData eventData)
         {
@@ -75,16 +78,16 @@ namespace MMUISystem.UIButton
                 OnButtonPressUp(eventData);
         }
 
+        void FireOnButtonTap(PointerEventData eventData)
+        {
+            if (OnButtonTap != null)
+                OnButtonTap(eventData);
+        }
+
         void FireOnButtonDoubleTap(PointerEventData eventData)
         {
             if (OnButtonDoubleTap != null)
                 OnButtonDoubleTap(eventData);
-        }
-
-        void FireOnButtonPressCancel(PointerEventData eventData)
-        {
-            if (OnButtonPressCancel != null)
-                OnButtonPressCancel(eventData);
         }
 
         void FireOnButtonPress(PointerEventData eventData)
@@ -171,15 +174,25 @@ namespace MMUISystem.UIButton
         {
         }
 
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.Mouse0))
+                Debug.Log(Time.realtimeSinceStartup);
+
+            if (Input.GetKey(KeyCode.Mouse0))
+                Debug.Log(Time.realtimeSinceStartup);
+        }
+
         private void OnStateHandled(InteractionStateEnum state)
         {
-            Debug.Log(state);
+            Debug.Log("Accepted State: " + state);
             switch(state)
             {
-                //case InteractionStateEnum.DelayedPress:
-                //    break;
                 case InteractionStateEnum.DoubleTap:
                     FireOnButtonDoubleTap(LastEventData);
+                    break;
+                case InteractionStateEnum.Tap:
+                    FireOnButtonTap(LastEventData);
                     break;
                 case InteractionStateEnum.Press:
                     FireOnButtonPress(LastEventData);

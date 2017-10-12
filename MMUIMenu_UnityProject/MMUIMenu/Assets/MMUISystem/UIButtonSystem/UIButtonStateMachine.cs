@@ -94,6 +94,8 @@ namespace MMUISystem.UIButton
             if (eligibleTransition == null)
                 return;
 
+            UnityEngine.Debug.Log(eligibleTransition.CurState + " --> " + eligibleTransition.OutcomeState);
+
             ChangeStateTo(eligibleTransition.OutcomeState);
         }
 
