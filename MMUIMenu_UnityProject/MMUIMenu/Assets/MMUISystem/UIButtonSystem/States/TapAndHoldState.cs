@@ -2,23 +2,26 @@
 
 namespace MMUISystem.UIButton
 {
-    public class TapState : StateBase
+    public class TapAndHoldState : StateBase
     {
-        public TapState()
+        public TapAndHoldState()
         {
-            StateEnum = InteractionStateEnum.Tap;
+            StateEnum = InteractionStateEnum.TapAndHold;
+
+            Conditions.Add(new ElapsedTimeIsHigherThan());
         }
 
         public override void UpdateFrame()
         {
             if (CanUpdate)
-            {
-            }
+                FireOnStateHandled();
         }
 
         public override void EnterStateHandler(params object[] addParams)
         {
             StateEnterTime = Time.realtimeSinceStartup;
+
+            DeltaTimeBetweenPrevState = UIButtonUtilities.GetTotalMillisecondsBetween(StateEnterTime, (float)addParams[0]);
 
             FireOnEnterStateHandled();
         }
@@ -27,6 +30,10 @@ namespace MMUISystem.UIButton
         {
             StateExitTime = Time.realtimeSinceStartup;
 
+            CanUpdate = false;
+
+            DeltaTimeBetweenPrevState = -1;
+
             FireOnExitStateHandled();
         }
 
@@ -34,7 +41,10 @@ namespace MMUISystem.UIButton
         {
             StateHandleTime = Time.realtimeSinceStartup;
 
-            FireOnStateHandled();
+            if (CheckTransitions())
+                FireOnNewStateRequested(CommandEnum.PressDown);
+            else
+                CanUpdate = true;
         }
     }
 }

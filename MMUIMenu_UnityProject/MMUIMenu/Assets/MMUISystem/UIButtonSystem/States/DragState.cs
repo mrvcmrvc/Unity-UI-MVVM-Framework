@@ -2,18 +2,17 @@
 
 namespace MMUISystem.UIButton
 {
-    public class TapState : StateBase
+    public class DragState : StateBase
     {
-        public TapState()
+        public DragState()
         {
-            StateEnum = InteractionStateEnum.Tap;
+            StateEnum = InteractionStateEnum.Drag;
         }
 
         public override void UpdateFrame()
         {
             if (CanUpdate)
-            {
-            }
+                FireOnStateHandled();
         }
 
         public override void EnterStateHandler(params object[] addParams)
@@ -27,6 +26,8 @@ namespace MMUISystem.UIButton
         {
             StateExitTime = Time.realtimeSinceStartup;
 
+            CanUpdate = false;
+
             FireOnExitStateHandled();
         }
 
@@ -34,7 +35,7 @@ namespace MMUISystem.UIButton
         {
             StateHandleTime = Time.realtimeSinceStartup;
 
-            FireOnStateHandled();
+            CanUpdate = true;
         }
     }
 }

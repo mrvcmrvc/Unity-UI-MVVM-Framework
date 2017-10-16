@@ -5,6 +5,12 @@
         PressDown,
         PressUp,
         Idle,
-        Tap
+        Tap,
+        Press,
+        DoubleTap,
+        DragBegin,
+        Drag,
+        DragEnd,
+        TapAndHold
     }
 }

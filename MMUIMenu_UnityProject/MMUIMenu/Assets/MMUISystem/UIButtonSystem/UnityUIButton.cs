@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -11,13 +10,13 @@ namespace MMUISystem.UIButton
     public class UnityUIButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     {
         public bool StartListeningOnEnable;
-        public bool IsDelayedButton;
-        public float DelayDurationBeforeFire;
+        //public bool IsDelayedButton;
+        //public float DelayDurationBeforeFire;
 
         protected bool IsListening;
+        protected PointerEventData LastEventData;
 
         private UIButtonStateMachine StateMachine;
-        private PointerEventData LastEventData;
 
         #region Events
         public Action<PointerEventData> OnButtonPressDown;
@@ -26,7 +25,7 @@ namespace MMUISystem.UIButton
 
         public Action<PointerEventData> OnButtonTap;
         public Action<PointerEventData> OnButtonDoubleTap;
-        public Action<PointerEventData> OnTapAndPress;
+        public Action<PointerEventData> OnTapAndHold;
 
         public Action<PointerEventData> OnButtonPressCancel;
         public Action<PointerEventData> OnDelayedButtonPressDown;
@@ -96,10 +95,10 @@ namespace MMUISystem.UIButton
                 OnButtonPress(eventData);
         }
 
-        void FireOnTapAndPress(PointerEventData eventData)
+        void FireOnTapAndHold(PointerEventData eventData)
         {
-            if (OnTapAndPress != null)
-                OnTapAndPress(eventData);
+            if (OnTapAndHold != null)
+                OnTapAndHold(eventData);
         }
         #endregion
 
@@ -121,6 +120,14 @@ namespace MMUISystem.UIButton
 
             if (StartListeningOnEnable)
                 StopListening();
+        }
+
+        private void Update()
+        {
+            if (StateMachine == null)
+                return;
+
+            StateMachine.UpdateFrame();
         }
 
         public virtual void StartListening()
@@ -170,22 +177,12 @@ namespace MMUISystem.UIButton
         #endregion
 
         #region StateMachine Implementation
-        private void OnStateEntered(InteractionStateEnum state)
+        protected virtual void OnStateEntered(InteractionStateEnum state)
         {
         }
 
-        private void Update()
+        protected virtual void OnStateHandled(InteractionStateEnum state)
         {
-            if (Input.GetKeyDown(KeyCode.Mouse0))
-                Debug.Log(Time.realtimeSinceStartup);
-
-            if (Input.GetKey(KeyCode.Mouse0))
-                Debug.Log(Time.realtimeSinceStartup);
-        }
-
-        private void OnStateHandled(InteractionStateEnum state)
-        {
-            Debug.Log("Accepted State: " + state);
             switch(state)
             {
                 case InteractionStateEnum.DoubleTap:
@@ -200,21 +197,22 @@ namespace MMUISystem.UIButton
                 case InteractionStateEnum.PressDown:
                     FireOnButtonPressDown(LastEventData);
                     break;
-                case InteractionStateEnum.Idle:
+                case InteractionStateEnum.TapAndHoldPressUp:
+                case InteractionStateEnum.PressUp:
                     FireOnButtonPressUp(LastEventData);
                     break;
-                case InteractionStateEnum.TapAndPress:
-                    FireOnTapAndPress(LastEventData);
+                case InteractionStateEnum.TapAndHold:
+                    FireOnTapAndHold(LastEventData);
                     break;
             }
         }
 
-        private void OnStateExited(InteractionStateEnum state)
+        protected virtual void OnStateExited(InteractionStateEnum state)
         {
         }
         #endregion
 
-        private void TriggerStateMachine(CommandEnum command)
+        protected void TriggerStateMachine(CommandEnum command)
         {
             StateMachine.UpdateState(command);
         }

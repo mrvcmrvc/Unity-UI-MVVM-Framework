@@ -67,8 +67,6 @@ public class UIHorizontalCarouselController : UIBehaviourControllerBase<UIHorizo
 
     private Vector2 GetPivotForContainer(PointerEventData eventData, bool isAppear)
     {
-        Vector2 newPivot = new Vector2(0f, 0.5f);
-
         if (eventData.delta.x < 0)
         {
             if(!isAppear)

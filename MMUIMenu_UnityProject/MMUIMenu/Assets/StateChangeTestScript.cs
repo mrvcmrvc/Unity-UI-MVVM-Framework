@@ -9,16 +9,19 @@ public class StateChangeTestScript : MonoBehaviour
 {
     public Slider SensivitySlider;
     public TextMeshProUGUI Text, ValueText;
-    public UnityUIButton UIButton;
+    public UnityUIDraggableButton UIButton;
 
     private void Awake()
     {
-        UIButton.OnButtonPressDown += OnPressDown;
-        UIButton.OnButtonPressUp += OnButtonPressUp;
-        UIButton.OnButtonPress += OnButtonPress;
         UIButton.OnButtonDoubleTap += OnButtonDoubleTap;
         UIButton.OnButtonTap += OnButtonTap;
-        UIButton.OnTapAndPress += OnTapAndPress;
+        UIButton.OnButtonPress += OnButtonPress;
+        UIButton.OnButtonPressDown += OnPressDown;
+        UIButton.OnButtonPressUp += OnButtonPressUp;
+        UIButton.OnTapAndHold += OnTapAndHold;
+        UIButton.OnButtonDragBegin += OnDragBegin;
+        UIButton.OnButtonDrag += OnDrag;
+        UIButton.OnButtonDragEnd += OnDragEnd;
     }
 
     void Update()
@@ -28,9 +31,9 @@ public class StateChangeTestScript : MonoBehaviour
         UIButtonUtilities.SensivityInMilliseconds = (int)SensivitySlider.value;
     }
 
-    private void OnTapAndPress(PointerEventData obj)
+    private void OnTapAndHold(PointerEventData obj)
     {
-        Text.text = "TapAndPress";
+        Text.text = "OnTapAndHold";
     }
 
     private void OnButtonTap(PointerEventData obj)
@@ -56,5 +59,20 @@ public class StateChangeTestScript : MonoBehaviour
     private void OnPressDown(PointerEventData obj)
     {
         Text.text = "PressDown";
+    }
+
+    private void OnDragBegin(PointerEventData obj)
+    {
+        Text.text = "Drag Begin";
+    }
+
+    private void OnDrag(PointerEventData obj)
+    {
+        Text.text = "Drag";
+    }
+
+    private void OnDragEnd(PointerEventData obj)
+    {
+        Text.text = "Drag End";
     }
 }

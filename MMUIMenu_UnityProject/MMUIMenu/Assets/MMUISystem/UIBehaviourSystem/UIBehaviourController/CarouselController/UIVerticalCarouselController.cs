@@ -61,8 +61,6 @@ public class UIVerticalCarouselController : UIBehaviourControllerBase<UIVertical
 
     private Vector2 GetPivotForContainer(PointerEventData eventData, bool isAppear)
     {
-        Vector2 newPivot = new Vector2(0.5f, 0f);
-
         if (eventData.delta.y < 0)
         {
             if (!isAppear)

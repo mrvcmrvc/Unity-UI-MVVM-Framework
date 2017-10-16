@@ -1,16 +1,16 @@
-﻿using System;
-
-namespace MMUISystem.UIButton
+﻿namespace MMUISystem.UIButton
 {
     public static class UIButtonUtilities
     {
         public static int SensivityInMilliseconds = 200;
 
-        public static int GetTotalMillisecondsBetween(DateTime from, DateTime to)
+        public static int GetTotalMillisecondsBetween(float from, float to)
         {
-            TimeSpan timePassed = from - to;
+            int fromInMillisec = (int)(from * 1000);
+            int toInMillisec = (int)(to * 1000);
 
-            return (int)timePassed.TotalMilliseconds;
+
+            return fromInMillisec - toInMillisec;
         }
     }
 }

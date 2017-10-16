@@ -1,4 +1,4 @@
-﻿using System;
+﻿using UnityEngine;
 
 namespace MMUISystem.UIButton
 {
@@ -9,20 +9,35 @@ namespace MMUISystem.UIButton
             StateEnum = InteractionStateEnum.Idle;
         }
 
+        public override void UpdateFrame()
+        {
+            if (CanUpdate)
+            {
+            }
+        }
+
         public override void EnterStateHandler(params object[] addParams)
         {
-            StateEnterTime = DateTime.Now;
+            StateEnterTime = Time.realtimeSinceStartup;
 
             FireOnEnterStateHandled();
         }
 
         public override void ExitStateHandler()
         {
+            StateExitTime = Time.realtimeSinceStartup;
+
+            CanUpdate = false;
+
             FireOnExitStateHandled();
         }
 
         public override void StateHandler()
         {
+            StateHandleTime = Time.realtimeSinceStartup;
+
+            CanUpdate = true;
+
             FireOnStateHandled();
         }
     }

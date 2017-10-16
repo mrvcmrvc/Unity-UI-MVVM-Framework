@@ -35,19 +35,49 @@ namespace MMUISystem.UIButton
         void IBeginDragHandler.OnBeginDrag(PointerEventData eventData)
         {
             if (IsListening)
-                FireOnButtonDragBegin(eventData);
+            {
+                LastEventData = eventData;
+
+                TriggerStateMachine(CommandEnum.DragBegin);
+            }
         }
 
         void IDragHandler.OnDrag(PointerEventData eventData)
         {
             if (IsListening)
-                FireOnButtonDrag(eventData);
+            {
+                LastEventData = eventData;
+
+                TriggerStateMachine(CommandEnum.Drag);
+            }
         }
 
         void IEndDragHandler.OnEndDrag(PointerEventData eventData)
         {
             if (IsListening)
-                FireOnButtonDragEnd(eventData);
+            {
+                LastEventData = eventData;
+
+                TriggerStateMachine(CommandEnum.DragEnd);
+            }
+        }
+
+        protected override void OnStateHandled(InteractionStateEnum state)
+        {
+            switch (state)
+            {
+                case InteractionStateEnum.DragBegin:
+                    FireOnButtonDragBegin(LastEventData);
+                    break;
+                case InteractionStateEnum.Drag:
+                    FireOnButtonDrag(LastEventData);
+                    break;
+                case InteractionStateEnum.DragEnd:
+                    FireOnButtonDragEnd(LastEventData);
+                    break;
+            }
+
+            base.OnStateHandled(state);
         }
         #endregion
     }

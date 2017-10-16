@@ -9,7 +9,6 @@ public class UIHorizontalInfiniteScrollViewController : UIBehaviourControllerBas
 
     private float _offset, _topDisablePoint, _bottomDisablePoint;
     private bool _isCompsDisabled;
-    private float _treshold = 100f;
 
     protected override void Awake()
     {

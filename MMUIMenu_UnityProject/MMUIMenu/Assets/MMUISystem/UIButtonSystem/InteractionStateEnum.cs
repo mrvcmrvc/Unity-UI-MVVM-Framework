@@ -8,10 +8,12 @@
         Press,
         Tap,
         DoubleTap,
-        TapAndPress,
+        TapAndHold,
+        TapAndHoldPressUp,
+        DragBegin,
+        Drag,
+        DragEnd,
+
         //DelayedPress,
-        //DragBegin,
-        //Drag,
-        //DragEnd
     }
 }
