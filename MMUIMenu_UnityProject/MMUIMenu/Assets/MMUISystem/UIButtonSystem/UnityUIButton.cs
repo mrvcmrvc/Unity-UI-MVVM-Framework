@@ -16,7 +16,7 @@ namespace MMUISystem.UIButton
         protected bool IsListening;
         protected PointerEventData LastEventData;
 
-        private UIButtonStateMachine StateMachine;
+        private UIButtonStateMachine StateMachine = new UIButtonStateMachine();
 
         #region Events
         public Action<PointerEventData> OnButtonPressDown;
@@ -102,10 +102,22 @@ namespace MMUISystem.UIButton
         }
         #endregion
 
-        private void Awake()
+        protected virtual void Awake()
         {
-            StateMachine = new UIButtonStateMachine();
             StateMachine.Init();
+
+            StateMachine.OnStateEntered += OnStateEntered;
+            StateMachine.OnStateHandled += OnStateHandled;
+            StateMachine.OnStateExited += OnStateExited;
+        }
+
+        protected virtual void OnDestroy()
+        {
+            StateMachine.ResetMachine();
+
+            StateMachine.OnStateEntered -= OnStateEntered;
+            StateMachine.OnStateHandled -= OnStateHandled;
+            StateMachine.OnStateExited -= OnStateExited;
         }
 
         protected virtual void OnEnable()
@@ -116,10 +128,10 @@ namespace MMUISystem.UIButton
 
         protected virtual void OnDisable()
         {
-            StateMachine.ResetMachine();
-
             if (StartListeningOnEnable)
                 StopListening();
+
+            StateMachine.OnDisable();
         }
 
         private void Update()
@@ -133,19 +145,11 @@ namespace MMUISystem.UIButton
         public virtual void StartListening()
         {
             IsListening = true;
-
-            StateMachine.OnStateEntered += OnStateEntered;
-            StateMachine.OnStateHandled += OnStateHandled;
-            StateMachine.OnStateExited += OnStateExited;
         }
 
         public virtual void StopListening()
         {
             IsListening = false;
-
-            StateMachine.OnStateEntered -= OnStateEntered;
-            StateMachine.OnStateHandled -= OnStateHandled;
-            StateMachine.OnStateExited -= OnStateExited;
         }
 
         #region Interface Implementation

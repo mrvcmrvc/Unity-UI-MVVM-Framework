@@ -36,6 +36,8 @@ namespace MMUISystem.UIButton
 
         public void Init()
         {
+            ResetMachine();
+
             States = new List<StateBase>
             {
                 { new TapState() },
@@ -90,6 +92,11 @@ namespace MMUISystem.UIButton
             States.ForEach(s => s.OnNewStateRequested -= OnNewStateRequested);
         }
 
+        public void OnDisable()
+        {
+            ChangeStateTo(InteractionStateEnum.Idle);
+        }
+
         private void OnNewStateRequested(CommandEnum command)
         {
             UpdateState(command);
@@ -109,7 +116,7 @@ namespace MMUISystem.UIButton
                 Debug.LogWarning("No Transition found for: " + CurState.StateEnum + " --> " + command);
                 return;
             }
-            Debug.Log("FROM: " + eligibleTransition.CurState + " TO: " + eligibleTransition.OutcomeState);
+
             ChangeStateTo(eligibleTransition.OutcomeState);
         }
 
@@ -121,7 +128,7 @@ namespace MMUISystem.UIButton
                 CurState.ExitStateHandler();
 
             CurState = FindState(state);
-            Debug.Log(CurState.StateEnum);
+
             if (CurState == null)
             {
                 Debug.LogWarning("CurState is null");
