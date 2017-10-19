@@ -89,5 +89,8 @@ public class UIVerticalAccordionBehaviour : UIBehaviourBase<UIVerticalAccordionB
 
         if (isFinished && _isActive)
             ShowContent();
+
+        if(isFinished)
+            FireOnTweenFinished(_isActive);
     }
 }

@@ -6,6 +6,7 @@ public class UIVerticalAccordionController : UIBehaviourControllerBase<UIVertica
     [Range(0f, 1f)]
     public float MinSize;
     public float Duration;
+    public int DefaultOpenedPage;
     public RectTransform AccordionContainer;
     public MMTweeningEaseEnum Ease;
 
@@ -13,8 +14,11 @@ public class UIVerticalAccordionController : UIBehaviourControllerBase<UIVertica
     {
         base.Awake();
 
+        if (DefaultOpenedPage >= BehaviourList.Count)
+            DefaultOpenedPage = 0;
+
         BehaviourList.ForEach(b => b.ResetUI(false, MinSize));
-        BehaviourList[0].ResetUI(true, 1 - (MinSize * (BehaviourList.Count - 1)));
+        BehaviourList[DefaultOpenedPage].ResetUI(true, 1 - (MinSize * (BehaviourList.Count - 1)));
     }
 
     public override void OnSubContainerPressDown(UIVerticalAccordionBehaviour interactedContainer, PointerEventData eventData)

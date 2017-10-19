@@ -89,5 +89,8 @@ public class UIHorizontalAccordionBehaviour : UIBehaviourBase<UIHorizontalAccord
 
         if (isFinished && _isActive)
             ShowContent();
+
+        if(isFinished)
+            FireOnTweenFinished(_isActive);
     }
 }

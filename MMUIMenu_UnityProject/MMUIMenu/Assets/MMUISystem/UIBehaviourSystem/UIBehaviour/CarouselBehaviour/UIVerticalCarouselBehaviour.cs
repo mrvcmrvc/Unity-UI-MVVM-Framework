@@ -111,6 +111,9 @@ public class UIVerticalCarouselBehaviour : UIBehaviourBase<UIVerticalCarouselBeh
 
         if (isFinished && _isActive)
             ShowContent();
+
+        if (isFinished)
+            FireOnTweenFinished(_isActive);
     } 
     #endregion
 }

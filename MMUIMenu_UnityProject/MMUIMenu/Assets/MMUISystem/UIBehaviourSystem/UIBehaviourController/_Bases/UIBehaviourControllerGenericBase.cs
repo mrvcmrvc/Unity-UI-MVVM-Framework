@@ -1,10 +1,18 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 public abstract class UIBehaviourControllerBase<T> : UIBehaviourControllerBase where T : UIBehaviourBase<T>
 {
     public List<T> BehaviourList { get; private set; }
+
+    public Action<bool> OnBehaviourTweenFinished;
+    protected void FireOnBehaviourTweenFinished(bool isActive)
+    {
+        if (OnBehaviourTweenFinished != null)
+            OnBehaviourTweenFinished(isActive);
+    }
 
     protected virtual void Awake()
     {
@@ -20,6 +28,8 @@ public abstract class UIBehaviourControllerBase<T> : UIBehaviourControllerBase w
             behaviour.OnButtonPressDownCallback += TriggerSubContainerPressDown;
             behaviour.OnButtonPressUpCallback += TriggerSubContainerPressUp;
             behaviour.OnButtonDelayedPressDownCallback += TriggerSubContainerDelayedPressDown;
+
+            behaviour.OnTweenFinished += FireOnBehaviourTweenFinished;
 
             behaviour.Init(((RectTransform)transform).sizeDelta);
         }
@@ -37,6 +47,8 @@ public abstract class UIBehaviourControllerBase<T> : UIBehaviourControllerBase w
             behaviour.OnButtonPressDownCallback -= TriggerSubContainerPressDown;
             behaviour.OnButtonPressUpCallback -= TriggerSubContainerPressUp;
             behaviour.OnButtonDelayedPressDownCallback -= TriggerSubContainerDelayedPressDown;
+
+            behaviour.OnTweenFinished -= FireOnBehaviourTweenFinished;
         }
 
         BehaviourList = null;

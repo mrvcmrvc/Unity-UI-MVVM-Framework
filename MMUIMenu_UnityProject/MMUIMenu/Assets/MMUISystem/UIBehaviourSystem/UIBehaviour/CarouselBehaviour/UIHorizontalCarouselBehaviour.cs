@@ -111,6 +111,9 @@ public class UIHorizontalCarouselBehaviour : UIBehaviourBase<UIHorizontalCarouse
 
         if(isFinished && _isActive)
             ShowContent();
+
+        if (isFinished)
+            FireOnTweenFinished(_isActive);
     }
     #endregion
 }

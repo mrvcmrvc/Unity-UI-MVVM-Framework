@@ -6,6 +6,7 @@ public class UIVerticalCarouselController : UIBehaviourControllerBase<UIVertical
     public float Duration;
     [Range(0f, 1f)]
     public float MinSize;
+    public int DefaultOpenedPage;
     public RectTransform CarouselContainer;
     public MMTweeningEaseEnum Ease;
     public CarouselTransitionEnum Transition;
@@ -14,8 +15,11 @@ public class UIVerticalCarouselController : UIBehaviourControllerBase<UIVertical
     {
         base.Awake();
 
+        if (DefaultOpenedPage >= BehaviourList.Count)
+            DefaultOpenedPage = 0;
+
         BehaviourList.ForEach(b => b.ResetUI(false, MinSize));
-        BehaviourList[0].ResetUI(true, 1 - MinSize);
+        BehaviourList[DefaultOpenedPage].ResetUI(true, 1 - MinSize);
     }
 
     public override void OnSubContainerDragBegin(UIVerticalCarouselBehaviour interactedContainer, PointerEventData eventData)
@@ -61,6 +65,8 @@ public class UIVerticalCarouselController : UIBehaviourControllerBase<UIVertical
 
     private Vector2 GetPivotForContainer(PointerEventData eventData, bool isAppear)
     {
+        Vector2 newPivot = new Vector2(0.5f, 0f);
+
         if (eventData.delta.y < 0)
         {
             if (!isAppear)

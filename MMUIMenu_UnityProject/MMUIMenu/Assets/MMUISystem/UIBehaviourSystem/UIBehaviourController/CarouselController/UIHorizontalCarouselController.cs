@@ -12,6 +12,7 @@ public class UIHorizontalCarouselController : UIBehaviourControllerBase<UIHorizo
     public float Duration;
     [Range(0f, 1f)]
     public float MinSize;
+    public int DefaultOpenedPage;
     public RectTransform CarouselContainer;
     public MMTweeningEaseEnum Ease;
     public CarouselTransitionEnum Transition;
@@ -20,8 +21,11 @@ public class UIHorizontalCarouselController : UIBehaviourControllerBase<UIHorizo
     {
         base.Awake();
 
+        if (DefaultOpenedPage >= BehaviourList.Count)
+            DefaultOpenedPage = 0;
+
         BehaviourList.ForEach(b => b.ResetUI(false, MinSize));
-        BehaviourList[0].ResetUI(true, 1 - MinSize);
+        BehaviourList[DefaultOpenedPage].ResetUI(true, 1 - MinSize);
     }
 
     public override void OnSubContainerDragBegin(UIHorizontalCarouselBehaviour interactedContainer, PointerEventData eventData)
@@ -67,6 +71,8 @@ public class UIHorizontalCarouselController : UIBehaviourControllerBase<UIHorizo
 
     private Vector2 GetPivotForContainer(PointerEventData eventData, bool isAppear)
     {
+        Vector2 newPivot = new Vector2(0f, 0.5f);
+
         if (eventData.delta.x < 0)
         {
             if(!isAppear)
