@@ -10,8 +10,6 @@ namespace MMUISystem.UIButton
     public class UnityUIButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     {
         public bool StartListeningOnEnable;
-        //public bool IsDelayedButton;
-        //public float DelayDurationBeforeFire;
 
         protected bool IsListening;
         protected PointerEventData LastEventData;
@@ -29,41 +27,6 @@ namespace MMUISystem.UIButton
 
         public Action<PointerEventData> OnButtonPressCancel;
         public Action<PointerEventData> OnDelayedButtonPressDown;
-
-        //public static Action<PointerEventData> OnButtonPressDelayStarted;
-        //public static Action<float> OnButtonPressDelayUpdate;
-        //public static Action<PointerEventData> OnButtonPressDelayFinished;
-        //public static Action OnButtonPressDelayCanceled;
-
-        //void FireOnButtonPressDelayCanceled()
-        //{
-        //    if (OnButtonPressDelayCanceled != null)
-        //        OnButtonPressDelayCanceled();
-        //}
-
-        //void FireOnButtonPressDelayUpdate(float progress)
-        //{
-        //    if (OnButtonPressDelayUpdate != null)
-        //        OnButtonPressDelayUpdate(progress);
-        //}
-
-        //void FireOnDelayStarted(PointerEventData eventData)
-        //{
-        //    if (OnButtonPressDelayStarted != null)
-        //        OnButtonPressDelayStarted(eventData);
-        //}
-
-        //void FireOnDelayFinished(PointerEventData eventData)
-        //{
-        //    if (OnButtonPressDelayFinished != null)
-        //        OnButtonPressDelayFinished(eventData);
-        //}
-
-        //void FireOnDelayedButtonPressDown(PointerEventData eventData)
-        //{
-        //    if (OnDelayedButtonPressDown != null)
-        //        OnDelayedButtonPressDown(eventData);
-        //}
 
         void FireOnButtonPressDown(PointerEventData eventData)
         {
