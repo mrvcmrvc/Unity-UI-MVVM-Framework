@@ -82,19 +82,15 @@ public abstract class UIBehaviourBase : MonoBehaviour
             DraggableInteractionButton.OnButtonDrag += OnButtonDrag;
             DraggableInteractionButton.OnButtonDragBegin += OnButtonDragBegin;
             DraggableInteractionButton.OnButtonDragEnd += OnButtonDragEnd;
-            DraggableInteractionButton.OnButtonPressCancel += OnButtonPressCancel;
             DraggableInteractionButton.OnButtonPressDown += OnButtonPressDown;
             DraggableInteractionButton.OnButtonPressUp += OnButtonPressUp;
-            DraggableInteractionButton.OnDelayedButtonPressDown += OnButtonDelayedPressDown;
         }
 
         if(InteractionButton != null)
         {
             InteractionButton.OnButtonDoubleTap += OnButtonDoubleTap;
-            InteractionButton.OnButtonPressCancel += OnButtonPressCancel;
             InteractionButton.OnButtonPressDown += OnButtonPressDown;
             InteractionButton.OnButtonPressUp += OnButtonPressUp;
-            InteractionButton.OnDelayedButtonPressDown += OnButtonDelayedPressDown;
         }
     }
 
@@ -106,19 +102,15 @@ public abstract class UIBehaviourBase : MonoBehaviour
             DraggableInteractionButton.OnButtonDrag -= OnButtonDrag;
             DraggableInteractionButton.OnButtonDragBegin -= OnButtonDragBegin;
             DraggableInteractionButton.OnButtonDragEnd -= OnButtonDragEnd;
-            DraggableInteractionButton.OnButtonPressCancel -= OnButtonPressCancel;
             DraggableInteractionButton.OnButtonPressDown -= OnButtonPressDown;
             DraggableInteractionButton.OnButtonPressUp -= OnButtonPressUp;
-            DraggableInteractionButton.OnDelayedButtonPressDown -= OnButtonDelayedPressDown;
         }
 
         if (InteractionButton != null)
         {
             InteractionButton.OnButtonDoubleTap -= OnButtonDoubleTap;
-            InteractionButton.OnButtonPressCancel -= OnButtonPressCancel;
             InteractionButton.OnButtonPressDown -= OnButtonPressDown;
             InteractionButton.OnButtonPressUp -= OnButtonPressUp;
-            InteractionButton.OnDelayedButtonPressDown -= OnButtonDelayedPressDown;
         }
     }
 

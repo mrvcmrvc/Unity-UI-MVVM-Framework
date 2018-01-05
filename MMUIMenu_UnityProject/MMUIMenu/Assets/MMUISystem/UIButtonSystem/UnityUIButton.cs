@@ -17,51 +17,79 @@ namespace MMUISystem.UIButton
         private UIButtonStateMachine StateMachine = new UIButtonStateMachine();
 
         #region Events
+        public static Action<PointerEventData, UnityUIButton> OnButtonPressDown_Static;
+        public static Action<PointerEventData, UnityUIButton> OnButtonPressUp_Static;
+        public static Action<PointerEventData, UnityUIButton> OnButtonPress_Static;
+        public static Action<PointerEventData, UnityUIButton> OnButtonTap_Static;
+        public static Action<PointerEventData, UnityUIButton> OnButtonDoubleTap_Static;
+        public static Action<PointerEventData, UnityUIButton> OnTapAndHold_Static;
+
         public Action<PointerEventData> OnButtonPressDown;
         public Action<PointerEventData> OnButtonPressUp;
         public Action<PointerEventData> OnButtonPress;
-
         public Action<PointerEventData> OnButtonTap;
         public Action<PointerEventData> OnButtonDoubleTap;
         public Action<PointerEventData> OnTapAndHold;
-
-        public Action<PointerEventData> OnButtonPressCancel;
-        public Action<PointerEventData> OnDelayedButtonPressDown;
+        public Action OnButtonDragged;
 
         void FireOnButtonPressDown(PointerEventData eventData)
         {
             if (OnButtonPressDown != null)
                 OnButtonPressDown(eventData);
+
+            if (OnButtonPressDown_Static != null)
+                OnButtonPressDown_Static(eventData, this);
         }
 
         void FireOnButtonPressUp(PointerEventData eventData)
         {
             if (OnButtonPressUp != null)
                 OnButtonPressUp(eventData);
+
+            if (OnButtonPressUp_Static != null)
+                OnButtonPressUp_Static(eventData, this);
         }
 
         void FireOnButtonTap(PointerEventData eventData)
         {
             if (OnButtonTap != null)
                 OnButtonTap(eventData);
+
+            if (OnButtonTap_Static != null)
+                OnButtonTap_Static(eventData, this);
         }
 
         void FireOnButtonDoubleTap(PointerEventData eventData)
         {
             if (OnButtonDoubleTap != null)
                 OnButtonDoubleTap(eventData);
+
+            if (OnButtonDoubleTap_Static != null)
+                OnButtonDoubleTap_Static(eventData, this);
         }
 
         void FireOnButtonPress(PointerEventData eventData)
         {
             if (OnButtonPress != null)
                 OnButtonPress(eventData);
+
+            if (OnButtonPress_Static != null)
+                OnButtonPress_Static(eventData, this);
         }
 
         void FireOnTapAndHold(PointerEventData eventData)
         {
             if (OnTapAndHold != null)
                 OnTapAndHold(eventData);
+
+            if (OnTapAndHold_Static != null)
+                OnTapAndHold_Static(eventData, this);
+        }
+
+        void FireOnButtonDragged()
+        {
+            if (OnButtonDragged != null)
+                OnButtonDragged();
         }
         #endregion
 
@@ -120,9 +148,6 @@ namespace MMUISystem.UIButton
         {
             if (IsListening)
             {
-                if (eventData.dragging)
-                    return;
-
                 LastEventData = eventData;
 
                 TriggerStateMachine(CommandEnum.PressDown);
@@ -133,9 +158,6 @@ namespace MMUISystem.UIButton
         {
             if (IsListening)
             {
-                if (eventData.dragging)
-                    return;
-
                 LastEventData = eventData;
 
                 TriggerStateMachine(CommandEnum.PressUp);
@@ -150,7 +172,7 @@ namespace MMUISystem.UIButton
 
         protected virtual void OnStateHandled(InteractionStateEnum state)
         {
-            switch(state)
+            switch (state)
             {
                 case InteractionStateEnum.DoubleTap:
                     FireOnButtonDoubleTap(LastEventData);

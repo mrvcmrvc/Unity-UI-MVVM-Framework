@@ -2,28 +2,66 @@
 
 public static class MMUISystemUtilities
 {
+    /// <summary>
+    /// Projection in local space is eligible for ONLY if the render mode of renderCanvas is "WorldSpace" and "ScreenSpaceCamera"
+    /// </summary>
+    /// <param name="targetRect"></param>
+    /// <param name="worldPos"></param>
+    /// <param name="targetCamera"></param>
+    /// <param name="renderCanvas"></param>
+    /// <param name="projectInLocalSpace"></param>
+    /// <returns></returns>
     public static Vector2 WorldPosToCanvasPos(RectTransform targetRect, Vector3 worldPos, Camera targetCamera, Canvas renderCanvas, bool projectInLocalSpace)
     {
-        RectTransform projectTransform = GetProjectionTransform(targetRect, renderCanvas, projectInLocalSpace);
+        switch (renderCanvas.renderMode)
+        {
+            case RenderMode.WorldSpace:
+            case RenderMode.ScreenSpaceCamera:
+                var resRatioBasedOnRef = targetCamera.pixelWidth / renderCanvas.GetComponent<RectTransform>().rect.width;
+                return (worldPos / renderCanvas.scaleFactor) * resRatioBasedOnRef;
+            case RenderMode.ScreenSpaceOverlay:
+                RectTransform projectTransform = GetProjectionTransform(targetRect, renderCanvas, projectInLocalSpace);
 
-        var projectAreaSize = new Vector2(projectTransform.rect.size.x * projectTransform.lossyScale.x, projectTransform.rect.size.y * projectTransform.lossyScale.y);
-        var viewportPos = targetCamera.WorldToViewportPoint(worldPos);
+                var projectAreaSize = new Vector2(projectTransform.rect.size.x * projectTransform.lossyScale.x, projectTransform.rect.size.y * projectTransform.lossyScale.y);
+                var viewportPos = targetCamera.WorldToViewportPoint(worldPos);
 
-        Vector2 padding = GetPaddingFromProjectionAreaToCanvas(projectTransform, projectAreaSize, renderCanvas);
+                Vector2 padding = GetPaddingFromProjectionAreaToCanvas(projectTransform, projectAreaSize, renderCanvas);
 
-        return new Vector2(projectAreaSize.x * viewportPos.x, projectAreaSize.y * viewportPos.y) + padding;
+                return new Vector2(projectAreaSize.x * viewportPos.x, projectAreaSize.y * viewportPos.y) + padding;
+            default:
+                return Vector2.zero;
+        }
     }
 
+    /// <summary>
+    /// Projection in local space is eligible for ONLY if the render mode of renderCanvas is "WorldSpace" and "ScreenSpaceCamera"
+    /// </summary>
+    /// <param name="targetRect"></param>
+    /// <param name="screenPos"></param>
+    /// <param name="targetCamera"></param>
+    /// <param name="renderCanvas"></param>
+    /// <param name="projectInLocalSpace"></param>
+    /// <returns></returns>
     public static Vector2 ScreenToCanvasPos(RectTransform targetRect, Vector2 screenPos, Camera targetCamera, Canvas renderCanvas, bool projectInLocalSpace)
     {
-        RectTransform projectTransform = GetProjectionTransform(targetRect, renderCanvas, projectInLocalSpace);
+        switch(renderCanvas.renderMode)
+        {
+            case RenderMode.WorldSpace:
+            case RenderMode.ScreenSpaceCamera:
+                var resRatioBasedOnRef = targetCamera.pixelWidth / renderCanvas.GetComponent<RectTransform>().rect.width;
+                return (targetCamera.ScreenToWorldPoint(screenPos) / renderCanvas.scaleFactor) * resRatioBasedOnRef;
+            case RenderMode.ScreenSpaceOverlay:
+                RectTransform projectTransform = GetProjectionTransform(targetRect, renderCanvas, projectInLocalSpace);
 
-        var projectAreaSize = new Vector2(projectTransform.rect.size.x * projectTransform.lossyScale.x, projectTransform.rect.size.y * projectTransform.lossyScale.y);
-        var viewportPos = targetCamera.ScreenToViewportPoint(screenPos);
+                var projectAreaSize = new Vector2(projectTransform.rect.size.x * projectTransform.lossyScale.x, projectTransform.rect.size.y * projectTransform.lossyScale.y);
+                var viewportPos = targetCamera.ScreenToViewportPoint(screenPos);
 
-        Vector2 padding = GetPaddingFromProjectionAreaToCanvas(projectTransform, projectAreaSize, renderCanvas);
+                Vector2 padding = GetPaddingFromProjectionAreaToCanvas(projectTransform, projectAreaSize, renderCanvas);
 
-        return new Vector2(projectAreaSize.x * viewportPos.x, projectAreaSize.y * viewportPos.y) + padding;
+                return new Vector2(projectAreaSize.x * viewportPos.x, projectAreaSize.y * viewportPos.y) + padding;
+            default:
+                return Vector2.zero;
+        }
     }
 
     static Vector2 GetPaddingFromProjectionAreaToCanvas(RectTransform projectTransform, Vector2 projectAreaSize, Canvas renderCanvas)
