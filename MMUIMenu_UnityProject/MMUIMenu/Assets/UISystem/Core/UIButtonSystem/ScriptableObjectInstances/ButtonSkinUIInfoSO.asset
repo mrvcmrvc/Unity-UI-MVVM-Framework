@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5904e2442f0375d409fe9fcb8b84bfde, type: 3}
+  m_Name: ButtonSkinUIInfoSO
+  m_EditorClassIdentifier: 
+  ButtonSkinInfoList:
+  - ButtonIdleSkin: {fileID: 21300000, guid: 92edba12789fd214e9ae3961af02f48d, type: 3}
+    ButtonPressedSkin: {fileID: 21300000, guid: d3a10fd874dbac94c887b6a97a631bf0,
+      type: 3}
+  - ButtonIdleSkin: {fileID: 21300000, guid: 42563d84dc8180346aaeae0c195fc2be, type: 3}
+    ButtonPressedSkin: {fileID: 21300000, guid: cbcdd3699e751bb40988e5a786d77b03,
+      type: 3}
+  - ButtonIdleSkin: {fileID: 21300000, guid: b4945269c35787a43a7b4f1716fdfad1, type: 3}
+    ButtonPressedSkin: {fileID: 21300000, guid: e0b37efbb0b59834da81ba1917a139f1,
+      type: 3}
+  - ButtonIdleSkin: {fileID: 21300000, guid: 95fca4fd516e17141b996d86fe9494fb, type: 3}
+    ButtonPressedSkin: {fileID: 21300000, guid: b97f67358c0877c4dafc9034daa88285,
+      type: 3}
+  - ButtonIdleSkin: {fileID: 21300000, guid: 6bf56874666890e40b483ad74b359991, type: 3}
+    ButtonPressedSkin: {fileID: 21300000, guid: 8cad84d525b28604fb765127bb1924bf,
+      type: 3}
+  - ButtonIdleSkin: {fileID: 21300000, guid: d47215235d0d4984ca9bc45f9ad197a7, type: 3}
+    ButtonPressedSkin: {fileID: 21300000, guid: 5d69bf3b67a75014a81d9ac39a6a5b71,
+      type: 3}
+  - ButtonIdleSkin: {fileID: 21300000, guid: d57e4cb1508cb9f4698aa812145b3fa0, type: 3}
+    ButtonPressedSkin: {fileID: 21300000, guid: 297d4495eab76e54c841585d28f49c17,
+      type: 3}
+  - ButtonIdleSkin: {fileID: 21300000, guid: feea182c396b16d4c9f1bdaf664a045a, type: 3}
+    ButtonPressedSkin: {fileID: 21300000, guid: f69ad6c5571e3f449b47179d491f0d39,
+      type: 3}
