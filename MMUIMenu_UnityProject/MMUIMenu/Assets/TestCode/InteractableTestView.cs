@@ -20,6 +20,16 @@ public class InteractableTestView : InteractableViewBase<InteractableTestPLD, bo
         Debug.Log("Updating Interactable View");
     }
 
+    protected override void OnVMPreActivationCustomActions()
+    {
+        //Activate button or stuff
+    }
+
+    protected override void OnVMPreDeactivationCustomActions()
+    {
+        // Deactivate button or stuff
+    }
+
     protected override void RegisterEventsCustomActions()
     {
         UpdateViewModel(true);

@@ -39,8 +39,8 @@ namespace MVVM
 
             _isDeactivationFinished = true;
 
-            VMBase.OnPostDeactivation += UIMenuClosed;
-            VMBase.OnUIMenuInitCompleted += OnNewUIInitCompleted;
+            VMBase.OnVMStateChanged += ONVMStateChanged;
+            VMBase.OnUIMenuInited += OnNewUIInitCompleted;
             VMBase.OnUIMenuDestroyed += OnUIMenuDestroyed;
 
             SceneManager.sceneUnloaded += OnSceneUnloaded;
@@ -48,8 +48,8 @@ namespace MVVM
 
         private void OnDestroy()
         {
-            VMBase.OnPostDeactivation -= UIMenuClosed;
-            VMBase.OnUIMenuInitCompleted -= OnNewUIInitCompleted;
+            VMBase.OnVMStateChanged -= ONVMStateChanged;
+            VMBase.OnUIMenuInited -= OnNewUIInitCompleted;
             VMBase.OnUIMenuDestroyed -= OnUIMenuDestroyed;
 
             SceneManager.sceneUnloaded -= OnSceneUnloaded;
@@ -103,8 +103,11 @@ namespace MVVM
             StartCloseMenu(null);
         }
 
-        private void UIMenuClosed(VMBase closedMenu)
+        private void ONVMStateChanged(VMBase closedMenu, EVMState curState)
         {
+            if (!curState.Equals(EVMState.PostDeactivation))
+                return;
+
             StartCloseMenu(null);
         }
 
@@ -118,7 +121,7 @@ namespace MVVM
                 {
                     foreach (var menu in ActiveUIMenuColl)
                     {
-                        if (!menu.IsPreActivationFinished)
+                        if (!menu.VMState.Equals(EVMState.PreActivation))
                             menu.Activate();
 
                         if (menu.DisableMenusUnderneath)
@@ -129,7 +132,7 @@ namespace MVVM
                 {
                     foreach(VMBase next in _nextOpeningMenuColl)
                     {
-                        if (!next.IsPreActivationFinished)
+                        if (!next.VMState.Equals(EVMState.PreActivation))
                         {
                             ActiveUIMenuColl.Add(next);
 
@@ -149,7 +152,7 @@ namespace MVVM
 
             var instance = _closeMenuColl[0];
             _closeMenuColl.RemoveAt(0);
-            if (!instance.IsPreDeactivationFinished)
+            if (!instance.VMState.Equals(EVMState.PreDeactivation))
                 instance.Deactivate();
         }
 
