@@ -241,6 +241,8 @@ namespace MVVM
                 LastEventData = eventData;
 
                 TriggerStateMachine(CommandEnum.PressDown);
+
+                base.OnPointerDown(eventData);
             }
             else if (IsDeactivated)
                 FireOnDeactivePressDown(eventData);
@@ -253,6 +255,8 @@ namespace MVVM
                 LastEventData = eventData;
 
                 TriggerStateMachine(CommandEnum.PressUp);
+
+                base.OnPointerUp(eventData);
             }
             else if (IsDeactivated)
                 FireOnDeactivePressUp(eventData);
@@ -261,7 +265,11 @@ namespace MVVM
         void IPointerExitHandler.OnPointerExit(PointerEventData eventData)
         {
             if (IsListening && !IsDeactivated)
+            {
                 _isExitedWhilePressed = true;
+
+                base.OnPointerExit(eventData);
+            }
         }
         #endregion
 

@@ -7,12 +7,6 @@ using System.Runtime.CompilerServices;
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
 public class ViewModelToViewAttribute : Attribute
 {
-    public Type PLDType { get; private set; }
-
-    public ViewModelToViewAttribute(Type pldType)
-    {
-        PLDType = pldType;
-    }
 }
 
 [AttributeUsage(AttributeTargets.Method)]
@@ -33,7 +27,7 @@ public static class BindingExtensions
         PropertyInfo[] propInfoColl = viewModel.GetType()
             .GetRuntimeProperties()
             .Where(m => m.GetCustomAttributes(typeof(ViewModelToViewAttribute), false).Length > 0)
-            .Where(m => ((ViewModelToViewAttribute)m.GetCustomAttribute(typeof(ViewModelToViewAttribute))).PLDType.Equals(typeof(TPLD)))
+            .Where(m => m.PropertyType.Equals(typeof(TPLD)))
             .ToArray();
 
         return (TPLD)propInfoColl[0].GetValue(viewModel);
@@ -45,7 +39,7 @@ public static class BindingExtensions
         PropertyInfo[] propInfoColl = viewModel.GetType()
             .GetRuntimeProperties()
             .Where(m => m.GetCustomAttributes(typeof(ViewModelToViewAttribute), false).Length > 0)
-            .Where(m => ((ViewModelToViewAttribute)m.GetCustomAttribute(typeof(ViewModelToViewAttribute))).PLDType.Equals(typeof(TPLD)))
+            .Where(m => m.PropertyType.Equals(typeof(TPLD)))
             .ToArray();
 
         return propInfoColl[0];

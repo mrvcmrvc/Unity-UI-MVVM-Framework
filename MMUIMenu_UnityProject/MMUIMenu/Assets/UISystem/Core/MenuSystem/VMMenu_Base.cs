@@ -11,5 +11,14 @@
 
             UIMenuManager.Instance.OpenUIMenu(this);
         }
+
+        protected sealed override void DeactivateUI()
+        {
+            bool isUIActive = UIMenuManager.Instance.IsUIActive<T>();
+            if (!isUIActive)
+                return;
+
+            UIMenuManager.Instance.CloseUIMenu(this);
+        }
     }
 }

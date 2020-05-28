@@ -48,7 +48,7 @@ namespace MVVM
 
         protected void Awake()
         {
-            RegisterActivationEvents(ActivateUI);
+            RegisterActivationEvents();
 
             Init();
 
@@ -59,7 +59,7 @@ namespace MVVM
 
         protected void OnDestroy()
         {
-            UnregisterActivationEvents(ActivateUI);
+            UnregisterActivationEvents();
 
             OnUIMenuDestroyed?.Invoke(this);
 
@@ -98,31 +98,12 @@ namespace MVVM
             OnPropertyChanged?.Invoke();
         }
 
-        protected virtual void AwakeCustomActions() { }
-
-        /// <summary>
-        /// Called at Awake
-        /// </summary>
-        protected virtual void InitCustomActions() { }
-        protected virtual void OnDestroyCustomActions() { }
-
-        /// <summary>
-        /// Register the callback, given as parameter, to events.
-        /// When callback is invoked, system will automatically open UI if it is not active already.
-        /// </summary>
-        /// <param name="callback"></param>
-        protected abstract void RegisterActivationEvents(Action callback);
-
-        /// <summary>
-        /// Unregister the callback, given as parameter, from events,
-        /// that are listened in "RegisterActivationEvents" method.
-        /// </summary>
-        /// <param name="callback"></param>
-        protected abstract void UnregisterActivationEvents(Action callback);
-        protected abstract void ActivateUI();
-
         #region Activation / Deactivation
-        public virtual void Activate()
+
+        /// <summary>
+        /// Do not call this manually, instead call ActivateUI()
+        /// </summary>
+        public void Activate()
         {
             _canvas.enabled = true;
 
@@ -159,7 +140,10 @@ namespace MVVM
             VMState = EVMState.PostActivation;
         }
 
-        public virtual void Deactivate()
+        /// <summary>
+        /// Do not call this manually, instead call DeactivateUI()
+        /// </summary>
+        public void Deactivate()
         {
             if (_activateRoutine != null)
                 StopCoroutine(_activateRoutine);
@@ -195,6 +179,19 @@ namespace MVVM
             _canvas.enabled = false;
         }
         #endregion
+
+        protected virtual void AwakeCustomActions() { }
+
+        /// <summary>
+        /// Called at Awake
+        /// </summary>
+        protected virtual void InitCustomActions() { }
+        protected virtual void OnDestroyCustomActions() { }
+
+        protected abstract void RegisterActivationEvents();
+        protected abstract void UnregisterActivationEvents();
+        protected abstract void ActivateUI();
+        protected abstract void DeactivateUI();
     }
 
 }

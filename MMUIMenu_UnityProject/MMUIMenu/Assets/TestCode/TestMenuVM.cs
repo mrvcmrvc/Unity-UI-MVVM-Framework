@@ -1,29 +1,22 @@
 ﻿using MVVM;
-using System;
 using System.Collections;
 using UnityEngine;
 
 public class TestMenuVM : VMBase<TestMenuVM>
 {
-    [ViewModelToView(typeof(NonInteractableTestPLD))]
-    private NonInteractableTestPLD _nonInteractableTestPLD { get; set; }
-
-    [ViewModelToView(typeof(InteractableTestPLD))]
-    private InteractableTestPLD _interactableTestPLD { get; set; }
-
-    private Action _callback;
+    [ViewModelToView] private NonInteractableTestPLD _nonInteractableTestPLD { get; set; }
+    [ViewModelToView] private InteractableTestPLD _interactableTestPLD { get; set; }
 
     private void Start()
     {
-        _callback?.Invoke();
+        ActivateUI();
     }
 
-    protected override void RegisterActivationEvents(Action callback)
+    protected override void RegisterActivationEvents()
     {
-        _callback = callback;
     }
 
-    protected override void UnregisterActivationEvents(Action callback)
+    protected override void UnregisterActivationEvents()
     {
     }
 
@@ -40,21 +33,8 @@ public class TestMenuVM : VMBase<TestMenuVM>
     [ViewToViewModel]
     private void OnInteractableTestViewPressed(bool val)
     {
-        UnityEngine.Debug.Log("OnInteractableTestViewPressed");
+        Debug.Log("OnInteractableTestViewPressed");
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private void Update()
     {

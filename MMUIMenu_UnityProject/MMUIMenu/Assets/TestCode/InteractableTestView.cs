@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class InteractableTestPLD : IPLDBase
 {
+    public bool CanAfford;
     public bool IsButtonActive { get; private set; }
 
     public InteractableTestPLD(bool isButtonActive)
@@ -20,6 +21,11 @@ public class InteractableTestView : InteractableViewBase<InteractableTestPLD, bo
         Debug.Log("Updating Interactable View");
     }
 
+    private void OnButtonPressed()
+    {
+        UpdateViewModel(true);
+    }
+
     protected override void OnVMPreActivationCustomActions()
     {
         //Activate button or stuff
@@ -32,7 +38,6 @@ public class InteractableTestView : InteractableViewBase<InteractableTestPLD, bo
 
     protected override void RegisterEventsCustomActions()
     {
-        UpdateViewModel(true);
     }
 
     protected override void UnregisterEventsCustomActions()
