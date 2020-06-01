@@ -23,15 +23,15 @@ public class InteractableTestView : InteractableViewBase<InteractableTestPLD>
 
     protected override void AwakeCustomActions()
     {
-        _animController.OnAnimStateChanged += OnPreOutroComplete;
+        _animController.OnAnimStateChanged += OnAnimStateChanged;
     }
 
     protected override void OnDestroyCustomActions()
     {
-        _animController.OnAnimStateChanged -= OnPreOutroComplete;
+        _animController.OnAnimStateChanged -= OnAnimStateChanged;
     }
 
-    private void OnPreOutroComplete(ViewAnimController.EViewAnimState state)
+    private void OnAnimStateChanged(ViewAnimController.EViewAnimState state)
     {
         switch(state)
         {
