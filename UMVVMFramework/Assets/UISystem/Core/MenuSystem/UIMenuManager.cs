@@ -39,7 +39,7 @@ namespace MVVM
 
             _isDeactivationFinished = true;
 
-            VMBase.OnVMStateChanged += ONVMStateChanged;
+            VMBase.OnVMStateChanged_Static += ONVMStateChanged;
             VMBase.OnUIMenuInited += OnNewUIInitCompleted;
             VMBase.OnUIMenuDestroyed += OnUIMenuDestroyed;
 
@@ -48,7 +48,7 @@ namespace MVVM
 
         private void OnDestroy()
         {
-            VMBase.OnVMStateChanged -= ONVMStateChanged;
+            VMBase.OnVMStateChanged_Static -= ONVMStateChanged;
             VMBase.OnUIMenuInited -= OnNewUIInitCompleted;
             VMBase.OnUIMenuDestroyed -= OnUIMenuDestroyed;
 
@@ -105,7 +105,7 @@ namespace MVVM
 
         private void ONVMStateChanged(VMBase closedMenu, EVMState curState)
         {
-            if (!curState.Equals(EVMState.PostDeactivation))
+            if (!curState.Equals(EVMState.Deactive))
                 return;
 
             StartCloseMenu(null);
@@ -121,7 +121,7 @@ namespace MVVM
                 {
                     foreach (var menu in ActiveUIMenuColl)
                     {
-                        if (!menu.VMState.Equals(EVMState.PreActivation))
+                        if (menu.VMState.Equals(EVMState.Deactive))
                             menu.Activate();
 
                         if (menu.DisableMenusUnderneath)
@@ -132,7 +132,7 @@ namespace MVVM
                 {
                     foreach(VMBase next in _nextOpeningMenuColl)
                     {
-                        if (!next.VMState.Equals(EVMState.PreActivation))
+                        if (next.VMState.Equals(EVMState.Deactive))
                         {
                             ActiveUIMenuColl.Add(next);
 
@@ -152,7 +152,8 @@ namespace MVVM
 
             var instance = _closeMenuColl[0];
             _closeMenuColl.RemoveAt(0);
-            if (!instance.VMState.Equals(EVMState.PreDeactivation))
+
+            if (instance.VMState.Equals(EVMState.Active))
                 instance.Deactivate();
         }
 

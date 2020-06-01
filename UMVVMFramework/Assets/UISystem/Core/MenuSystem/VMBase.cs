@@ -1,16 +1,12 @@
 ﻿using System;
-using System.Collections;
 using UnityEngine;
 
 namespace MVVM
 {
     public enum EVMState
     {
-        None,
-        PreActivation,
-        PostActivation,
-        PreDeactivation,
-        PostDeactivation
+        Active,
+        Deactive
     }
 
     public abstract class VMBase : MonoBehaviour
@@ -19,20 +15,18 @@ namespace MVVM
         public static Action<VMBase> OnUIMenuInited;
         public static Action<VMBase> OnUIMenuDestroyed;
 
-        public static Action<VMBase, EVMState> OnVMStateChanged;
+        public static Action<VMBase, EVMState> OnVMStateChanged_Static;
+        public Action<EVMState> OnVMStateChanged;
 
         public Action OnPropertyChanged;
         #endregion
 
         [SerializeField] private Canvas _canvas;
         [SerializeField] private bool _disableMenusUnderneath;
-        [SerializeField] private UIAnimSequence _uiMenuAnimation;
 
         public bool DisableMenusUnderneath { get { return _disableMenusUnderneath; } }
 
-        private IEnumerator _deactivateRoutine, _activateRoutine;
-
-        private EVMState _vmState;
+        private EVMState _vmState = EVMState.Deactive;
         public EVMState VMState
         {
             get { return _vmState; }
@@ -42,7 +36,9 @@ namespace MVVM
                     return;
                 
                 _vmState = value;
-                OnVMStateChanged?.Invoke(this, _vmState);
+
+                OnVMStateChanged_Static?.Invoke(this, _vmState);
+                OnVMStateChanged?.Invoke(_vmState);
             }
         }
 
@@ -73,26 +69,6 @@ namespace MVVM
             OnUIMenuInited?.Invoke(this);
         }
 
-        protected virtual IEnumerator PreDeactivateAdditional()
-        {
-            yield return new WaitForEndOfFrame();
-        }
-
-        protected virtual IEnumerator PostDeactivateAdditional()
-        {
-            yield return new WaitForEndOfFrame();
-        }
-
-        protected virtual IEnumerator PreActivateAdditional()
-        {
-            yield return new WaitForEndOfFrame();
-        }
-
-        protected virtual IEnumerator PostActivateAdditional()
-        {
-            yield return new WaitForEndOfFrame();
-        }
-
         protected void NotifyPropertyChanged()
         {
             OnPropertyChanged?.Invoke();
@@ -107,37 +83,9 @@ namespace MVVM
         {
             _canvas.enabled = true;
 
-            if (_deactivateRoutine != null)
-                StopCoroutine(_deactivateRoutine);
+            VMState = EVMState.Active;
 
-            if (_activateRoutine != null)
-                StopCoroutine(_activateRoutine);
-
-            _activateRoutine = ActivateRoutine();
-            StartCoroutine(_activateRoutine);
-        }
-
-        private IEnumerator ActivateRoutine()
-        {
-            yield return StartCoroutine(PreActivateAdditional());
-
-            VMState = EVMState.PreActivation;
-
-            if (_uiMenuAnimation != null)
-            {
-                _uiMenuAnimation.ResetSequence();
-
-                _uiMenuAnimation.PlayIntroSequence(OnMenuIntroAnimFinished);
-            }
-            else
-                OnMenuIntroAnimFinished();
-        }
-
-        private void OnMenuIntroAnimFinished()
-        {
-            StartCoroutine(PostActivateAdditional());
-            
-            VMState = EVMState.PostActivation;
+            OnActivateCustomActions();
         }
 
         /// <summary>
@@ -145,39 +93,13 @@ namespace MVVM
         /// </summary>
         public void Deactivate()
         {
-            if (_activateRoutine != null)
-                StopCoroutine(_activateRoutine);
-
-            if (_deactivateRoutine != null)
-                StopCoroutine(_deactivateRoutine);
-
-            _deactivateRoutine = DeactivateRoutine();
-            StartCoroutine(_deactivateRoutine);
-        }
-
-        private IEnumerator DeactivateRoutine()
-        {
-            yield return StartCoroutine(PreDeactivateAdditional());
-
-            VMState = EVMState.PreDeactivation;
-
-            if (_uiMenuAnimation != null)
-                _uiMenuAnimation.PlayOutroSequence(OnMenuOutroAnimFinished);
-            else
-                OnMenuOutroAnimFinished();
-        }
-
-        private void OnMenuOutroAnimFinished()
-        {
-            if (_uiMenuAnimation != null)
-                _uiMenuAnimation.ResetSequence();
-
-            StartCoroutine(PostDeactivateAdditional());
-
-            VMState = EVMState.PostDeactivation;
-
             _canvas.enabled = false;
+
+            VMState = EVMState.Deactive;
+
+            OnDeactivateCustomActions();
         }
+
         #endregion
 
         protected virtual void AwakeCustomActions() { }
@@ -187,6 +109,9 @@ namespace MVVM
         /// </summary>
         protected virtual void InitCustomActions() { }
         protected virtual void OnDestroyCustomActions() { }
+
+        protected virtual void OnActivateCustomActions() { }
+        protected virtual void OnDeactivateCustomActions() { }
 
         protected abstract void RegisterActivationEvents();
         protected abstract void UnregisterActivationEvents();

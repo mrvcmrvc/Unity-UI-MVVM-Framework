@@ -1,23 +1,22 @@
-﻿using System.Reflection;
+﻿using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 namespace MVVM
 {
-    public abstract class InteractableViewBase<TPLD, TViewValue> : MonoBehaviour, IVMStateObserver
+    public abstract class InteractableViewBase<TPLD> : MonoBehaviour
     where TPLD : IPLDBase
     {
         private VMBase _cachedViewModel;
         private PropertyInfo _cachedVMProperty;
-        private MethodInfo _cachedMethodInfo;
+        private Dictionary<string, MethodInfo> _cachedMethodInfoColl;
         private PropertyChangeValidator _propertyChangeValidator;
 
-        protected abstract string _viewModelMethodName { get; }
+        protected abstract List<string> _viewModelMethodNameColl { get; }
 
         private void Awake()
         {
             Init();
-
-            ((IVMStateObserver)this).RegisterToVMStateEvents();
 
             RegisterEvents();
 
@@ -27,8 +26,6 @@ namespace MVVM
         private void OnDestroy()
         {
             _cachedViewModel.OnPropertyChanged -= OnPropertyChanged;
-
-            ((IVMStateObserver)this).UnregisterFromVMStateEvents();
 
             UnregisterEvents();
 
@@ -43,7 +40,10 @@ namespace MVVM
             _cachedViewModel.OnPropertyChanged += OnPropertyChanged;
 
             _cachedVMProperty = BindingExtensions.GetPropertyInfoOf<TPLD>(_cachedViewModel);
-            _cachedMethodInfo = BindingExtensions.GetMethodInfoOf(_cachedViewModel, _viewModelMethodName);
+
+            _cachedMethodInfoColl = new Dictionary<string, MethodInfo>();
+            foreach (string methodName in _viewModelMethodNameColl)
+                _cachedMethodInfoColl.Add(methodName, BindingExtensions.GetMethodInfoOf(_cachedViewModel, methodName));
 
             _propertyChangeValidator = new PropertyChangeValidator();
         }
@@ -68,45 +68,12 @@ namespace MVVM
             ParsePLD(newPLD);
         }
 
-        protected void UpdateViewModel(TViewValue value)
+        protected void UpdateViewModel(string methodName, params object[] parameters)
         {
-            _cachedMethodInfo.Invoke(_cachedViewModel, new object[] { value });
+            MethodInfo targetMethodInfo = _cachedMethodInfoColl[methodName];
+
+            targetMethodInfo.Invoke(_cachedViewModel, parameters);
         }
-
-        #region IVMStateObserver Implementation
-        VMBase IVMStateObserver.GetViewModel()
-        {
-            if (_cachedViewModel == null)
-                _cachedViewModel = GetComponentInParent<VMBase>();
-
-            return _cachedViewModel;
-        }
-
-        void IVMStateObserver.OnVMPreActivation()
-        {
-            OnVMPreActivationCustomActions();
-        }
-
-        void IVMStateObserver.OnVMPostActivation()
-        {
-            OnVMPostActivationCustomActions();
-        }
-
-        void IVMStateObserver.OnVMPreDeactivation()
-        {
-            OnVMPreDeactivationCustomActions();
-        }
-
-        void IVMStateObserver.OnVMPostDeactivation()
-        {
-            OnVMPostDeactivationCustomActions();
-        }
-
-        protected virtual void OnVMPreActivationCustomActions() { }
-        protected virtual void OnVMPostActivationCustomActions() { }
-        protected virtual void OnVMPreDeactivationCustomActions() { }
-        protected virtual void OnVMPostDeactivationCustomActions() { }
-        #endregion
 
         /// <summary>
         /// Called at Awake

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace MVVM
 {
-    public abstract class NonInteractableViewBase<TPLD> : MonoBehaviour, IVMStateObserver
+    public abstract class NonInteractableViewBase<TPLD> : MonoBehaviour
     where TPLD : IPLDBase
     {        
         private VMBase _cachedViewModel;
@@ -14,16 +14,12 @@ namespace MVVM
         {
             Init();
 
-            ((IVMStateObserver)this).RegisterToVMStateEvents();
-
             AwakeCustomActions();
         }
 
         private void OnDestroy()
         {
             _cachedViewModel.OnPropertyChanged -= OnPropertyChanged;
-
-            ((IVMStateObserver)this).UnregisterFromVMStateEvents();
 
             OnDestroyCustomActions();
         }
@@ -49,41 +45,6 @@ namespace MVVM
 
             ParsePLD(newPLD);
         }
-
-        #region IVMStateObserver Implementation
-        VMBase IVMStateObserver.GetViewModel()
-        {
-            if (_cachedViewModel == null)
-                _cachedViewModel = GetComponentInParent<VMBase>();
-
-            return _cachedViewModel;
-        }
-
-        void IVMStateObserver.OnVMPreActivation()
-        {
-            OnVMPreActivationCustomActions();
-        }
-
-        void IVMStateObserver.OnVMPostActivation()
-        {
-            OnVMPostActivationCustomActions();
-        }
-
-        void IVMStateObserver.OnVMPreDeactivation()
-        {
-            OnVMPreDeactivationCustomActions();
-        }
-
-        void IVMStateObserver.OnVMPostDeactivation()
-        {
-            OnVMPostDeactivationCustomActions();
-        }
-
-        protected virtual void OnVMPreActivationCustomActions() { }
-        protected virtual void OnVMPostActivationCustomActions() { }
-        protected virtual void OnVMPreDeactivationCustomActions() { }
-        protected virtual void OnVMPostDeactivationCustomActions() { }
-        #endregion
 
         protected abstract void ParsePLD(TPLD pld);
         protected virtual void AwakeCustomActions() { }

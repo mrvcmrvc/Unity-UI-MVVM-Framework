@@ -1,5 +1,7 @@
 ﻿using MVVM;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class InteractableTestPLD : IPLDBase
 {
@@ -12,35 +14,55 @@ public class InteractableTestPLD : IPLDBase
     }
 }
 
-public class InteractableTestView : InteractableViewBase<InteractableTestPLD, bool>
+public class InteractableTestView : InteractableViewBase<InteractableTestPLD>
 {
-    protected override string _viewModelMethodName { get { return "OnInteractableTestViewPressed"; } }
+    protected override List<string> _viewModelMethodNameColl { get { return new List<string>() { "OnInteractableTestViewPressed" }; } }
+
+    [SerializeField] private ViewAnimController _animController;
+    [SerializeField] private UnityUIButton _testButton;
+
+    protected override void AwakeCustomActions()
+    {
+        _animController.OnAnimStateChanged += OnPreOutroComplete;
+    }
+
+    protected override void OnDestroyCustomActions()
+    {
+        _animController.OnAnimStateChanged -= OnPreOutroComplete;
+    }
+
+    private void OnPreOutroComplete(ViewAnimController.EViewAnimState state)
+    {
+        switch(state)
+        {
+            case ViewAnimController.EViewAnimState.PostIntro:
+                _testButton.StartListening();
+                break;
+            case ViewAnimController.EViewAnimState.PreOutro:
+                _testButton.StopListening();
+                break;
+        }
+    }
 
     protected override void ParsePLD(InteractableTestPLD pld)
     {
         Debug.Log("Updating Interactable View");
     }
 
-    private void OnButtonPressed()
-    {
-        UpdateViewModel(true);
-    }
-
-    protected override void OnVMPreActivationCustomActions()
-    {
-        //Activate button or stuff
-    }
-
-    protected override void OnVMPreDeactivationCustomActions()
-    {
-        // Deactivate button or stuff
-    }
-
     protected override void RegisterEventsCustomActions()
     {
+        _testButton.OnButtonPressedUp += OnButtonPressed;
+        _testButton.OnButtonTapped += OnButtonPressed;
     }
 
     protected override void UnregisterEventsCustomActions()
     {
+        _testButton.OnButtonPressedUp -= OnButtonPressed;
+        _testButton.OnButtonTapped -= OnButtonPressed;
+    }
+
+    private void OnButtonPressed(PointerEventData eventData)
+    {
+        UpdateViewModel(_viewModelMethodNameColl[0]);
     }
 }
