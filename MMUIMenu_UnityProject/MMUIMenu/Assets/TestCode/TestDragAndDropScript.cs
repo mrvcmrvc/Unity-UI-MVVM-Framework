@@ -13,9 +13,9 @@ public class TestDragAndDropScript : MonoBehaviour
     private void Update()
     {
         if (Input.GetKey(KeyCode.Mouse0))
-            ImageTransform.position = MMUISystemUtilities.ScreenToCanvasPos(ImageTransform, Input.mousePosition, Camera.main, RenderCanvas, ProjectToLocal);
+            ImageTransform.position = UISystemUtilities.ScreenToCanvasPos(ImageTransform, Input.mousePosition, Camera.main, RenderCanvas, ProjectToLocal);
 
         if (Input.GetKey(KeyCode.Space))
-            ImageTransform.position = MMUISystemUtilities.WorldPosToCanvasPos(ImageTransform, TargetCube.transform.position, Camera.main, RenderCanvas, ProjectToLocal);
+            ImageTransform.position = UISystemUtilities.WorldPosToCanvasPos(ImageTransform, TargetCube.transform.position, Camera.main, RenderCanvas, ProjectToLocal);
     }
 }

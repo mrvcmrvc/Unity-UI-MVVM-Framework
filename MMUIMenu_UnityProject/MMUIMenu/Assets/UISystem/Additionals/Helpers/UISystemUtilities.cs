@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public static class MMUISystemUtilities
+public static class UISystemUtilities
 {
     /// <summary>
     /// Projection in local space is eligible for ONLY if the render mode of renderCanvas is "WorldSpace" and "ScreenSpaceCamera"
