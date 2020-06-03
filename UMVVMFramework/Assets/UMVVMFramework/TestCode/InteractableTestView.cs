@@ -45,13 +45,13 @@ public class InteractableTestView : InteractableViewBase<InteractableTestPLD>
         _uiAnimController.OnPreOutro -= OnPreOutro;
     }
 
-    private void OnPostIntro()
+    private void OnPostIntro(UIAnimController animController)
     {
         Debug.Log("OnPostIntro");
         _testButton.StartListening();
     }
 
-    private void OnPreOutro()
+    private void OnPreOutro(UIAnimController animController)
     {
         Debug.Log("OnPreOutro");
         _testButton.StopListening();

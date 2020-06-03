@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace MVVM
@@ -8,6 +8,108 @@ namespace MVVM
     {
         Active,
         Deactive
+    }
+
+    public class VMDeactivationController
+    {
+        private List<UIAnimController> _outroListeninAnimControllerColl = new List<UIAnimController>();
+        private Action _callback;
+
+        public void StopDeactivationListening()
+        {
+            foreach(UIAnimController animController in _outroListeninAnimControllerColl)
+                RemoveAnimController(animController);
+        }
+
+        public void ListenOutroAnimsTriggeredByVM(Action<EVMState> targetEvent, Action callback)
+        {
+            _callback = callback;
+
+            _outroListeninAnimControllerColl = new List<UIAnimController>();
+
+            List<UIAnimTriggerBase> vmListeningAnimTriggerColl = GetTriggersFromVMEvent(targetEvent);
+
+            List<UIAnimController> candidateOutroListeninAnimControllerColl = GetAnimationControllersFromTriggerOutro(vmListeningAnimTriggerColl);
+
+            foreach(UIAnimController animController in candidateOutroListeninAnimControllerColl)
+            {
+                if (animController.CurState.Equals(UIAnimController.EUIAnimState.PostOutro)
+                    || animController.CurState.Equals(UIAnimController.EUIAnimState.PreOutro))
+                    continue;
+
+                _outroListeninAnimControllerColl.Add(animController);
+
+                animController.OnPostOutro += OnAnimPostOutro;
+            }
+
+            CheckIfAllAnimsCompleted();
+        }
+
+        private void OnAnimPostOutro(UIAnimController animController)
+        {
+            RemoveAnimController(animController);
+
+            CheckIfAllAnimsCompleted();
+        }
+
+        private void RemoveAnimController(UIAnimController controller)
+        {
+            controller.OnPostOutro -= OnAnimPostOutro;
+
+            _outroListeninAnimControllerColl.Remove(controller);
+        }
+
+        private void CheckIfAllAnimsCompleted()
+        {
+            if (_outroListeninAnimControllerColl.Count > 0)
+                return;
+
+            _callback?.Invoke();
+        }
+
+        private List<UIAnimTriggerBase> GetTriggersFromVMEvent(Action<EVMState> targetEvent)
+        {
+            List<UIAnimTriggerBase> _animTrigggerColl = new List<UIAnimTriggerBase>();
+
+            Delegate[] delegates = targetEvent.GetInvocationList();
+
+            foreach (Delegate del in delegates)
+            {
+                if (!(del.Target is UIAnimTriggerBase))
+                    continue;
+
+                _animTrigggerColl.Add(del.Target as UIAnimTriggerBase);
+            }
+
+            return _animTrigggerColl;
+        }
+
+        private List<UIAnimController> GetAnimationControllersFromTriggerOutro(List<UIAnimTriggerBase> triggerColl)
+        {
+            List<UIAnimController> _animControllerColl = new List<UIAnimController>();
+
+            foreach (UIAnimTriggerBase trigger in triggerColl)
+                _animControllerColl.AddRange(GetAnimationControllersFromTriggerOutro(trigger));
+
+            return _animControllerColl;
+        }
+
+        private List<UIAnimController> GetAnimationControllersFromTriggerOutro(UIAnimTriggerBase trigger)
+        {
+            List<UIAnimController> _animControllerColl = new List<UIAnimController>();
+
+            Delegate[] delegates = trigger.OnOutroTriggered.GetInvocationList();
+
+            foreach (Delegate del in delegates)
+            {
+                if (!(del.Target is UIAnimController))
+                    continue;
+
+                _animControllerColl.Add(del.Target as UIAnimController);
+            }
+
+            return _animControllerColl;
+        }
     }
 
     public abstract class VMBase : MonoBehaviour
@@ -22,13 +124,12 @@ namespace MVVM
         public Action OnPropertyChanged;
         #endregion
 
-        [SerializeField] private float _disablingDelay;
         [SerializeField] private bool _disableVMsUnderneath;
 
         public bool DisableVMsUnderneath { get { return _disableVMsUnderneath; } }
 
         private Canvas _canvas;
-        private IEnumerator _disableDelayRoutine;
+        private VMDeactivationController _deactivationController;
 
         private EVMState _vmState = EVMState.Deactive;
         public EVMState VMState
@@ -70,6 +171,8 @@ namespace MVVM
         {
             _canvas = GetComponent<Canvas>();
 
+            _deactivationController = new VMDeactivationController();
+
             InitCustomActions();
 
             OnVMInited?.Invoke(this);
@@ -87,10 +190,9 @@ namespace MVVM
         /// </summary>
         public void Activate()
         {
-            if (_disableDelayRoutine != null)
-                StopCoroutine(_disableDelayRoutine);
-
             _canvas.enabled = true;
+
+            _deactivationController.StopDeactivationListening();
 
             VMState = EVMState.Active;
 
@@ -102,19 +204,13 @@ namespace MVVM
         /// </summary>
         public void Deactivate()
         {
+            _deactivationController.ListenOutroAnimsTriggeredByVM(OnVMStateChanged, OnOutroAnimsFinished);
+
             VMState = EVMState.Deactive;
-
-            if (_disableDelayRoutine != null)
-                StopCoroutine(_disableDelayRoutine);
-
-            _disableDelayRoutine = DisableDelayRoutine();
-            StartCoroutine(_disableDelayRoutine);
         }
 
-        private IEnumerator DisableDelayRoutine()
+        private void OnOutroAnimsFinished()
         {
-            yield return new WaitForSecondsRealtime(_disablingDelay);
-
             _canvas.enabled = false;
 
             OnDeactivateCustomActions();

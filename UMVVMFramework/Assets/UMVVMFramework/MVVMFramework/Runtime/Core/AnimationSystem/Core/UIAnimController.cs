@@ -16,10 +16,10 @@ namespace MVVM
         }
 
         #region Events
-        public Action OnPreIntro;
-        public Action OnPostIntro;
-        public Action OnPreOutro;
-        public Action OnPostOutro; 
+        public Action<UIAnimController> OnPreIntro;
+        public Action<UIAnimController> OnPostIntro;
+        public Action<UIAnimController> OnPreOutro;
+        public Action<UIAnimController> OnPostOutro; 
         #endregion
 
         [SerializeField] private UIAnimTriggerBase _trigger;
@@ -75,7 +75,7 @@ namespace MVVM
         {
             CurState = EUIAnimState.PreIntro;
 
-            OnPreIntro?.Invoke();
+            OnPreIntro?.Invoke(this);
 
             _animBehavColl.ForEach(s => s.PlayIntro(OnIntroSequenceFinished));
         }
@@ -84,7 +84,7 @@ namespace MVVM
         {
             CurState = EUIAnimState.PreOutro;
 
-            OnPreOutro?.Invoke();
+            OnPreOutro?.Invoke(this);
 
             _animBehavColl.ForEach(s => s.PlayOutro(OnOutroSequenceFinished));
         }
@@ -95,7 +95,7 @@ namespace MVVM
             {
                 CurState = EUIAnimState.PostIntro;
 
-                OnPostIntro?.Invoke();
+                OnPostIntro?.Invoke(this);
             }
         }
 
@@ -105,7 +105,7 @@ namespace MVVM
             {
                 CurState = EUIAnimState.PostOutro;
 
-                OnPostOutro?.Invoke();
+                OnPostOutro?.Invoke(this);
             }
         }
 
