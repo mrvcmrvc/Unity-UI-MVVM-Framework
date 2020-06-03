@@ -3,41 +3,79 @@ using UnityEngine;
 
 public class UISpawnController : MonoBehaviour
 {
-    public List<GameObject> PlaceholderList;
-    public int SpawnAmount;
+    [SerializeField] private GameObject _placeholder;
+
+    private List<GameObject> _cachedSpawnedColl = new List<GameObject>();
 
     private void Awake()
     {
-        PlaceholderList.ForEach(ph => ph.SetActive(false));
+        _placeholder.SetActive(false);
     }
 
-    public List<T> LoadSpawnables<T>(int amount = -1, bool activateAll = false)
+    public List<T> LoadSpawnables<T>(int amount, bool activateAll = false)
     {
-        int spawnAmount = SpawnAmount;
-        if (amount > 0)
-            spawnAmount = amount;
+        if (_cachedSpawnedColl.Count > 0)
+            UnloadAllSpawned();
 
+        int addSpawnAmount = UpdateAmountWithCachedSpawnables(amount);
+
+        IncreasePool(addSpawnAmount);
+
+        return GetCachedSpawnablesOf<T>(amount, activateAll);
+    }
+
+    private int UpdateAmountWithCachedSpawnables(int amount)
+    {
+        if (_cachedSpawnedColl.Count < amount)
+            amount -= _cachedSpawnedColl.Count;
+        else
+            amount = 0;
+
+        return amount;
+    }
+
+    private void IncreasePool(int amount)
+    {
+        for (int i = 0; i < amount; i++)
+        {
+            GameObject container = Instantiate(_placeholder, Vector3.zero, Quaternion.identity, _placeholder.transform.parent);
+            container.transform.localPosition = Vector3.zero;
+            container.transform.localEulerAngles = Vector3.zero;
+
+            _cachedSpawnedColl.Add(container);
+
+            container.name = container.name.Replace("Placeholder", "");
+        }
+    }
+
+    private List<T> GetCachedSpawnablesOf<T>(int amount, bool activateAll)
+    {
         List<T> resultList = new List<T>();
 
-        foreach(var placeholder in PlaceholderList)
+        for (int i = 0; i < amount; i++)
         {
-            for (int i = 0; i < spawnAmount; i++)
-            {
-                GameObject container = Instantiate(placeholder, Vector3.zero, Quaternion.identity, placeholder.transform.parent);
-                container.transform.localPosition = Vector3.zero;
-                container.transform.localEulerAngles = Vector3.zero;
+            resultList.Add(_cachedSpawnedColl[i].GetComponent<T>());
 
-                resultList.Add(container.GetComponent<T>());
-
-                container.name = container.name.Replace("Placeholder", "");
-
-                if(activateAll)
-                    container.gameObject.SetActive(true);
-                else
-                    container.gameObject.SetActive(false);
-            }
+            if (activateAll)
+                _cachedSpawnedColl[i].SetActive(true);
+            else
+                _cachedSpawnedColl[i].SetActive(false);
         }
 
         return resultList;
+    }
+
+    private void UnloadAllSpawned()
+    {
+        UnloadSpawned(_cachedSpawnedColl.Count);
+    }
+
+    private void UnloadSpawned(int amount)
+    {
+        if (amount > _cachedSpawnedColl.Count)
+            amount = _cachedSpawnedColl.Count;
+
+        for (int i = amount; i > 0; i--)
+            _cachedSpawnedColl[_cachedSpawnedColl.Count - i].SetActive(false);
     }
 }

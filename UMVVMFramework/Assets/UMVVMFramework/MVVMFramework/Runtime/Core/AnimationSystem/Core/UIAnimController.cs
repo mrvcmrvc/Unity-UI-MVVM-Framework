@@ -31,12 +31,18 @@ namespace MVVM
         {
             ResetSequence();
 
+            if (_trigger == null)
+                return;
+
             _trigger.OnIntroTriggered += OnIntroTriggered;
             _trigger.OnOutroTriggered += OnOutroTriggered;
         }
 
         private void OnDestroy()
         {
+            if (_trigger == null)
+                return;
+
             _trigger.OnIntroTriggered -= OnIntroTriggered;
             _trigger.OnOutroTriggered -= OnOutroTriggered;
         }

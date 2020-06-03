@@ -1,5 +1,6 @@
 ﻿using MVVM;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -40,6 +41,18 @@ public static class BindingExtensions
             .GetRuntimeProperties()
             .Where(m => m.GetCustomAttributes(typeof(ViewModelToViewAttribute), false).Length > 0)
             .Where(m => m.PropertyType.Equals(typeof(TPLD)))
+            .ToArray();
+
+        return propInfoColl[0];
+    }
+
+    public static PropertyInfo GetListPropertyInfoOf<TPLD>(VMBase viewModel)
+    where TPLD : IPLDBase
+    {
+        PropertyInfo[] propInfoColl = viewModel.GetType()
+            .GetRuntimeProperties()
+            .Where(m => m.GetCustomAttributes(typeof(ViewModelToViewAttribute), false).Length > 0)
+            .Where(m => m.PropertyType.Equals(typeof(List<TPLD>)))
             .ToArray();
 
         return propInfoColl[0];

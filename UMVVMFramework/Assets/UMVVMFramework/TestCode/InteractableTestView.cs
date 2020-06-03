@@ -1,5 +1,4 @@
 ﻿using MVVM;
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -47,13 +46,11 @@ public class InteractableTestView : InteractableViewBase<InteractableTestPLD>
 
     private void OnPostIntro(UIAnimController animController)
     {
-        Debug.Log("OnPostIntro");
         _testButton.StartListening();
     }
 
     private void OnPreOutro(UIAnimController animController)
     {
-        Debug.Log("OnPreOutro");
         _testButton.StopListening();
     }
 
