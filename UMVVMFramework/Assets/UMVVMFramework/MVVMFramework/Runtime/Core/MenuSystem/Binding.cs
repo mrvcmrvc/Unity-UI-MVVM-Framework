@@ -21,19 +21,26 @@ public class ViewToViewModelAttribute : Attribute
     }
 }
 
+public class BindablePropertyNotFoundException : Exception
+{
+    private const string message = "Property \"{0}\" is not found in \"{1}\"";
+    public BindablePropertyNotFoundException(VMBase targetVM, Type pldType)
+        : base(string.Format(message, pldType.ToString(), targetVM.name))
+    {
+    }
+}
+
+public class BindableMethodNotFoundException : Exception
+{
+    private const string message = "Method \"{0}\" is not found in \"{1}\"";
+    public BindableMethodNotFoundException(VMBase targetVM, string methodName)
+        : base(string.Format(message, methodName, targetVM.name))
+    {
+    }
+}
+
 public static class BindingExtensions
 {
-    public static TPLD GetPLDValue<TPLD>(VMBase viewModel) where TPLD : IPLDBase
-    {
-        PropertyInfo[] propInfoColl = viewModel.GetType()
-            .GetRuntimeProperties()
-            .Where(m => m.GetCustomAttributes(typeof(ViewModelToViewAttribute), false).Length > 0)
-            .Where(m => m.PropertyType.Equals(typeof(TPLD)))
-            .ToArray();
-
-        return (TPLD)propInfoColl[0].GetValue(viewModel);
-    }
-
     public static PropertyInfo GetPropertyInfoOf<TPLD>(VMBase viewModel)
         where TPLD : IPLDBase
     {
@@ -42,6 +49,9 @@ public static class BindingExtensions
             .Where(m => m.GetCustomAttributes(typeof(ViewModelToViewAttribute), false).Length > 0)
             .Where(m => m.PropertyType.Equals(typeof(TPLD)))
             .ToArray();
+
+        if (propInfoColl.Length == 0)
+            throw new BindablePropertyNotFoundException(viewModel, typeof(TPLD));
 
         return propInfoColl[0];
     }
@@ -55,6 +65,9 @@ public static class BindingExtensions
             .Where(m => m.PropertyType.Equals(typeof(List<TPLD>)))
             .ToArray();
 
+        if (propInfoColl.Length == 0)
+            throw new BindablePropertyNotFoundException(viewModel, typeof(List<TPLD>));
+
         return propInfoColl[0];
     }
 
@@ -65,6 +78,9 @@ public static class BindingExtensions
             .Where(m => m.GetCustomAttributes(typeof(ViewToViewModelAttribute), false).Length > 0)
             .Where(m => ((ViewToViewModelAttribute)m.GetCustomAttribute(typeof(ViewToViewModelAttribute))).UniqueName.Equals(targetMethodName))
             .ToArray();
+
+        if (methodInfoColl.Length == 0)
+            throw new BindableMethodNotFoundException(viewModel, targetMethodName);
 
         return methodInfoColl[0];
     }
