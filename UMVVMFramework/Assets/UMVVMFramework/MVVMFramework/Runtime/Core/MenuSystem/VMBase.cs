@@ -70,7 +70,10 @@ namespace MVVM
         private List<UIAnimTriggerBase> GetTriggersFromVMEvent(Action<EVMState> targetEvent)
         {
             List<UIAnimTriggerBase> _animTrigggerColl = new List<UIAnimTriggerBase>();
-
+            
+            if (targetEvent == null)
+                return _animTrigggerColl;
+            
             Delegate[] delegates = targetEvent.GetInvocationList();
 
             foreach (Delegate del in delegates)
