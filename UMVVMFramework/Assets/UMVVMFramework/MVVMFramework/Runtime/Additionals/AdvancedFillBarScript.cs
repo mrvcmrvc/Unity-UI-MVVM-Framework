@@ -7,50 +7,107 @@ using UnityEngine.UI;
 
 public class AdvancedFillBarScript : MonoBehaviour
 {
+    #region Events
+    public Action<float> OnBarUpdate;
+    private void FireOnBarUpdate(float clampedPassedTime)
+    {
+        OnBarUpdate?.Invoke(clampedPassedTime);
+    }
+
+    public Action OnBarUpdateComplete;
+    private void FireOnBarUpdateComplete()
+    {
+        OnBarUpdateComplete?.Invoke();
+    }
+    #endregion
+
     public Slider Slider;
     public Image IncreaseFill, DecreaseFill;
+    public Image FillObj;
     public TextMeshProUGUI PercentageText;
     public RectTransform PlaceholderGrid;
     public UISpawnController SpawnController;
 
-    [Range(0f,1f)]
+    [Range(0f, 1f)]
     public float InitialValue;
-    public float DecreaseSpeed;
-    public int HealthPerCell;
+    public float Duration;
+    public int ValuePerCell;
 
+    public bool UseDeltaColors = true;
     public bool ShowAsPercentage;
     public bool ShowGrids;
     public bool BarGradientColor;
 
-    public Color DecreaseColor = new Color(207.0f/255.0f, 42.0f/255.0f, 39.0f/255.0f), IncreaseColor = new Color(0.0f/255.0f, 158.0f/255.0f, 15.0f/255.0f);
+    public Color DecreaseColor = new Color(207.0f / 255.0f, 42.0f / 255.0f, 39.0f / 255.0f), IncreaseColor = new Color(0.0f / 255.0f, 158.0f / 255.0f, 15.0f / 255.0f);
     public Color FullColor = Color.white, EmptyColor = Color.white;
+    public bool LerpH = true, LerpS = true, LerpV = true;
 
-    RectTransform _incRect, _decRect;
+    private RectTransform _incRect, _decRect;
+    private RectTransform IncRect
+    {
+        get
+        {
+            if (_incRect == null)
+                _incRect = IncreaseFill.GetComponent<RectTransform>();
+
+            return _incRect;
+        }
+    }
+
+    private RectTransform DecRect
+    {
+        get
+        {
+            if (_decRect == null)
+                _decRect = DecreaseFill.GetComponent<RectTransform>();
+
+            return _decRect;
+        }
+    }
+
     IEnumerator _updateRoutine;
     float _targetValue;
     bool _isBarDecrease;
     List<Image> _gridObjs = new List<Image>();
+    float _fillRectWidth, _fillRectHeight;
 
     private void Awake()
     {
         _updateRoutine = null;
         _isBarDecrease = false;
 
-        _decRect = DecreaseFill.GetComponent<RectTransform>();
-        _incRect = IncreaseFill.GetComponent<RectTransform>();
+        CalculateOrgRectWidthHeight();
 
         _targetValue = InitialValue;
         Slider.value = InitialValue;
 
         IncreaseFill.color = IncreaseColor;
         DecreaseFill.color = DecreaseColor;
+
+        if (BarGradientColor)
+        {
+            UseDeltaColors = false;
+
+            UpdateGradientColor();
+        }
+
+        if (UseDeltaColors)
+            BarGradientColor = false;
+    }
+
+    private void CalculateOrgRectWidthHeight()
+    {
+        Slider.value = 1f;
+
+        Canvas.ForceUpdateCanvases();
+
+        _fillRectWidth = Slider.fillRect.rect.width;
+        _fillRectHeight = Slider.fillRect.rect.height;
     }
 
     private void Start()
     {
         TooglePercentage(ShowAsPercentage);
-
-        UpdatePercentageText(InitialValue * 100.0f);
     }
 
     public void UpdateBar(int percentage, bool instant = false)
@@ -64,13 +121,22 @@ public class AdvancedFillBarScript : MonoBehaviour
 
         _isBarDecrease = Slider.value > _targetValue;
 
-        if(!instant)
+        if (!instant)
         {
             _updateRoutine = UpdateSliderValue();
             StartCoroutine(_updateRoutine);
         }
         else
+        {
+            ResetIncDecBarAnchor();
+
             Slider.value = _targetValue;
+
+            if (BarGradientColor)
+                UpdateGradientColor();
+
+            FireOnBarUpdateComplete();
+        }
     }
 
     public void TooglePercentage(bool isActive)
@@ -80,16 +146,16 @@ public class AdvancedFillBarScript : MonoBehaviour
         PercentageText.gameObject.SetActive(ShowAsPercentage);
     }
 
-    public void ActivateGrids(int maxHealth)
+    public void ActivateGrids(int maxValue)
     {
-        if (!CheckIfGridDrawCond(maxHealth))
+        if (!CheckIfGridDrawCond(maxValue))
             return;
 
         ShowGrids = true;
 
         InitGridPivot();
 
-        InitGrids(maxHealth);
+        InitGrids(maxValue);
 
         OrderGrids();
     }
@@ -101,8 +167,10 @@ public class AdvancedFillBarScript : MonoBehaviour
         if (_gridObjs.Count != 0)
         {
             for (int i = _gridObjs.Count - 1; i > 0; i--)
-                Destroy(_gridObjs[i]);
+                Destroy(_gridObjs[i].gameObject);
         }
+
+        _gridObjs.Clear();
     }
 
     private void UpdatePercentageText(float percentage)
@@ -110,9 +178,9 @@ public class AdvancedFillBarScript : MonoBehaviour
         PercentageText.text = "%" + percentage.ToString();
     }
 
-    private bool CheckIfGridDrawCond(int maxHealth)
+    private bool CheckIfGridDrawCond(int maxValue)
     {
-        if (maxHealth < HealthPerCell)
+        if (maxValue < ValuePerCell)
         {
             DeactivateGrids();
 
@@ -130,44 +198,73 @@ public class AdvancedFillBarScript : MonoBehaviour
             gridPivot.x = 0f;
         else if (Slider.direction == Slider.Direction.RightToLeft)
             gridPivot.x = 1f;
+        else if (Slider.direction == Slider.Direction.BottomToTop)
+            gridPivot.y = 0f;
+        else if (Slider.direction == Slider.Direction.TopToBottom)
+            gridPivot.y = 1f;
 
         PlaceholderGrid.SetPivotWithCounterAdjustPosition(gridPivot);
     }
 
-    private void InitGrids(int maxHealth)
+    private void InitGrids(int maxValue)
     {
         if (_gridObjs.Count != 0)
             DeactivateGrids();
 
-        int totalCellCount = maxHealth / HealthPerCell;
+        int totalCellCount = maxValue / ValuePerCell;
         int gridLineCount = totalCellCount;
         _gridObjs = SpawnController.LoadSpawnables<Image>(gridLineCount, true);
     }
 
-    private float CalculateCellWidth(int gridLineCount)
+    private float CalculateCellSizeOnAppAxis(int gridLineCount)
     {
-        float areaWidth = Slider.fillRect.rect.width;
-        float pureArea = areaWidth - (gridLineCount * PlaceholderGrid.rect.width);
+        float areaSize = GetAppropriateFillRectSize();
+        float gridSize = GetAppropriateGridSize();
 
-        return pureArea / gridLineCount;
+        float useableArea = areaSize - (gridLineCount * gridSize);
+
+        return useableArea / gridLineCount;
+    }
+
+    private float GetAppropriateFillRectSize()
+    {
+        if (_fillRectHeight == 0 || _fillRectWidth == 0)
+            CalculateOrgRectWidthHeight();
+
+        if (Slider.direction == Slider.Direction.BottomToTop || Slider.direction == Slider.Direction.TopToBottom)
+            return _fillRectHeight;
+
+        return _fillRectWidth;
+    }
+
+    private float GetAppropriateGridSize()
+    {
+        if (Slider.direction == Slider.Direction.BottomToTop || Slider.direction == Slider.Direction.TopToBottom)
+            return PlaceholderGrid.rect.height;
+
+        return PlaceholderGrid.rect.width;
     }
 
     private void OrderGrids()
     {
         int sign = 1;
-        if (Slider.direction == Slider.Direction.RightToLeft)
+        if (Slider.direction == Slider.Direction.RightToLeft || Slider.direction == Slider.Direction.TopToBottom)
             sign = -1;
 
-        float cellWidth = CalculateCellWidth(_gridObjs.Count);
+        float cellSize = CalculateCellSizeOnAppAxis(_gridObjs.Count);
 
         float offset = 0f;
-        for(int i = 0; i < _gridObjs.Count; i++)
+        for (int i = 0; i < _gridObjs.Count; i++)
         {
             if (i != 0)
-                offset = PlaceholderGrid.rect.width;
+                offset = GetAppropriateGridSize();
 
             var newPos = _gridObjs[i].transform.localPosition;
-            newPos.x = sign * (((i + 1) * cellWidth) + (i * offset));
+
+            if (Slider.direction == Slider.Direction.LeftToRight || Slider.direction == Slider.Direction.RightToLeft)
+                newPos.x = sign * (((i + 1) * cellSize) + (i * offset));
+            else
+                newPos.y = sign * (((i + 1) * cellSize) + (i * offset));
 
             ((RectTransform)_gridObjs[i].transform).anchoredPosition = newPos;
         }
@@ -175,14 +272,46 @@ public class AdvancedFillBarScript : MonoBehaviour
 
     IEnumerator UpdateSliderValue()
     {
-        while (true)
-        {
-            Slider.value = Mathf.Lerp(Slider.value, _targetValue, Time.deltaTime * DecreaseSpeed);
+        float from = Slider.value;
+        float to = _targetValue;
+        float passedTime = 0f;
 
-            SetIncDecBarAnchors();
+        ResetIncDecBarAnchor();
+
+        while (passedTime <= Duration)
+        {
+            Slider.value = Mathf.Lerp(from, to, passedTime / Duration);
+
+            if (UseDeltaColors)
+                SetIncDecBarAnchors();
+            else if (BarGradientColor)
+                UpdateGradientColor();
+
+            FireOnBarUpdate(passedTime / Duration);
+
+            passedTime += Time.unscaledDeltaTime;
 
             yield return null;
         }
+
+        Slider.value = to;
+
+        _updateRoutine = null;
+
+        FireOnBarUpdateComplete();
+    }
+
+    private void UpdateGradientColor()
+    {
+        float h1, s1, v1, h2, s2, v2, h3, s3, v3;
+        Color.RGBToHSV(EmptyColor, out h1, out s1, out v1);
+        Color.RGBToHSV(FullColor, out h2, out s2, out v2);
+
+        h3 = LerpH ? Mathf.Lerp(h1, h2, Slider.value) : h1;
+        s3 = LerpS ? Mathf.Lerp(s1, s2, Slider.value) : s1;
+        v3 = LerpV ? Mathf.Lerp(v1, v2, Slider.value) : v1;
+
+        FillObj.color = Color.HSVToRGB(h3, s3, v3);
     }
 
     void SetIncDecBarAnchors()
@@ -193,18 +322,19 @@ public class AdvancedFillBarScript : MonoBehaviour
 
         if (_isBarDecrease)
         {
-            anchorMax = _decRect.anchorMax;
-            anchorMin = _decRect.anchorMin;
+            anchorMax = DecRect.anchorMax;
+            anchorMin = DecRect.anchorMin;
         }
         else
         {
-            anchorMax = _incRect.anchorMax;
-            anchorMin = _incRect.anchorMin;
+            anchorMax = IncRect.anchorMax;
+            anchorMin = IncRect.anchorMin;
         }
 
         switch (Slider.direction)
         {
             case Slider.Direction.LeftToRight:
+            case Slider.Direction.BottomToTop:
                 if (_isBarDecrease)
                 {
                     anchorMax.x = Slider.value;
@@ -217,6 +347,7 @@ public class AdvancedFillBarScript : MonoBehaviour
                 }
                 break;
             case Slider.Direction.RightToLeft:
+            case Slider.Direction.TopToBottom:
                 if (_isBarDecrease)
                 {
                     anchorMin.x = 1 - Slider.value;
@@ -228,21 +359,17 @@ public class AdvancedFillBarScript : MonoBehaviour
                     anchorMax.x = 1 - Slider.value;
                 }
                 break;
-            case Slider.Direction.BottomToTop:
-            case Slider.Direction.TopToBottom:
-                Debug.LogError("This state is not working yet, please use LeftToRight direction on slider");
-                break;
         }
 
-        if(_isBarDecrease)
+        if (_isBarDecrease)
         {
-            _decRect.anchorMax = anchorMax;
-            _decRect.anchorMin = anchorMin;
+            DecRect.anchorMax = anchorMax;
+            DecRect.anchorMin = anchorMin;
         }
         else
         {
-            _incRect.anchorMax = anchorMax;
-            _incRect.anchorMin = anchorMin;
+            IncRect.anchorMax = anchorMax;
+            IncRect.anchorMin = anchorMin;
         }
     }
 
@@ -253,30 +380,56 @@ public class AdvancedFillBarScript : MonoBehaviour
             case Slider.Direction.LeftToRight:
                 if (_isBarDecrease)
                 {
-                    _incRect.anchorMin = new Vector2(1f, 0f);
-                    _incRect.anchorMax = new Vector2(1f, 1f);
+                    IncRect.anchorMin = new Vector2(1f, 0f);
+                    IncRect.anchorMax = new Vector2(1f, 1f);
                 }
                 else
                 {
-                    _decRect.anchorMin = new Vector2(1f, 0f);
-                    _decRect.anchorMax = new Vector2(1f, 1f);
+                    DecRect.anchorMin = new Vector2(1f, 0f);
+                    DecRect.anchorMax = new Vector2(1f, 1f);
+
+                    IncRect.anchorMin = new Vector2(1f, 0f);
+                    IncRect.anchorMax = new Vector2(1f, 1f);
                 }
                 break;
             case Slider.Direction.RightToLeft:
                 if (_isBarDecrease)
                 {
-                    _incRect.anchorMin = new Vector2(0f, 0f);
-                    _incRect.anchorMax = new Vector2(0f, 1f);
+                    IncRect.anchorMin = new Vector2(0f, 0f);
+                    IncRect.anchorMax = new Vector2(0f, 1f);
                 }
                 else
                 {
-                    _decRect.anchorMin = new Vector2(0f, 0f);
-                    _decRect.anchorMax = new Vector2(0f, 1f);
+                    DecRect.anchorMin = new Vector2(0f, 0f);
+                    DecRect.anchorMax = new Vector2(0f, 1f);
+
+                    IncRect.anchorMin = new Vector2(0f, 0f);
+                    IncRect.anchorMax = new Vector2(0f, 1f);
                 }
                 break;
             case Slider.Direction.BottomToTop:
+                if (_isBarDecrease)
+                {
+                    IncRect.anchorMin = new Vector2(0f, 1f);
+                    IncRect.anchorMax = new Vector2(1f, 1f);
+                }
+                else
+                {
+                    DecRect.anchorMin = new Vector2(0f, 1f);
+                    DecRect.anchorMax = new Vector2(1f, 1f);
+                }
+                break;
             case Slider.Direction.TopToBottom:
-                Debug.LogError("This state is not working yet, please use LeftToRight direction on slider");
+                if (_isBarDecrease)
+                {
+                    IncRect.anchorMin = new Vector2(0f, 0f);
+                    IncRect.anchorMax = new Vector2(1f, 0f);
+                }
+                else
+                {
+                    DecRect.anchorMin = new Vector2(0f, 0f);
+                    DecRect.anchorMax = new Vector2(1f, 0f);
+                }
                 break;
         }
     }
