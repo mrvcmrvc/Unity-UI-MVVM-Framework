@@ -54,19 +54,6 @@ namespace MVVM
 
         protected override bool AdditionalInputEligibleCheck()
         {
-            return CheckIfAnyInputBlockerUIActive();
-        }
-
-        private bool CheckIfAnyInputBlockerUIActive()
-        {
-            VMManager.Instance.IsAnyVMActive(out List<VMBase> activeVMCollection, typeof(VMBase));
-
-            for (int i = 0; i < activeVMCollection.Count; i++)
-            {
-                if (activeVMCollection[i] is IInputBlocker)
-                    return false;
-            }
-
             return true;
         }
     }
